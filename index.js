@@ -12,14 +12,6 @@ const modes = {
   pair: new Buffer('c203303430', 'hex')
 }
 
-/*
-bleSerial.on('connected', function(peripheral){
-  console.log('connected', peripheral.advertisement);
-
-  //uuids.push(peripheral.uuid.substring(0, 8));
-});
-*/
-
 noble.on('stateChange', function(state) {
   if (state === 'poweredOn') {
     console.log(state, 'startScanning')
@@ -30,9 +22,9 @@ noble.on('stateChange', function(state) {
 });
 
 noble.on('discover', function(peripheral) {
-  console.log('peripheral found', peripheral.advertisement)
 
   if (peripheral.advertisement.manufacturerData && peripheral.advertisement.manufacturerData.compare(modes['pair']) === 0) {
+    console.log('peripheral found', peripheral.advertisement)
     noble.stopScanning();
 
     peripheral.on('disconnect', function() {
@@ -44,32 +36,38 @@ noble.on('discover', function(peripheral) {
       peripheral.discoverServices([serviceUUID], function(error, services) {
         services.forEach(function(service) {
           console.log('service', service.uuid);
-          service.discoverCharacteristics([], function(error, characteristics) {
-            characteristics.forEach(function(characteristic) {
-              console.log('characteristic', characteristic.uuid);
-              if (characteristic.properties.includes('write')) {
-
-                var changeInterval = setInterval(function() {
-                  if (i >= test_buffers.length) {
-                    clearInterval(changeInterval);
-                    return false;
-                  }
-
-                  console.log('sending', test_buffers[i]);
-                  characteristic.write(test_buffers[i++]);
-                }, 1000);
-
-              } else if (characteristic.properties.includes('indicate')) {
-                characteristic.on('data', function callback(data, isNotification){
-                  console.log('new data', isNotification, data);
-                });
-                console.log('subscribed!');
-                characteristic.subscribe();
-              }
-            });
-          });
+          service.discoverCharacteristics([], handleCharacteristics);
         });
       });
     });
   }
 });
+
+function handleCharacteristics(error, characteristics) {
+  characteristics.forEach(function(characteristic) {
+    console.log('characteristic', characteristic.uuid);
+    if (characteristic.properties.includes('write')) {
+      sendTestdata(characteristic)
+    } else if (characteristic.properties.includes('indicate')) {
+      characteristic.on('data', newData);
+      console.log('subscribed!');
+      characteristic.subscribe();
+    }
+  });
+}
+
+function sendTestdata(writeCharacteristic) {
+  var changeInterval = setInterval(function() {
+    if (i >= test_buffers.length) {
+      clearInterval(changeInterval);
+      return false;
+    }
+
+    console.log('sending', test_buffers[i]);
+    writeCharacteristic.write(test_buffers[i++]);
+  }, 1000);
+}
+
+function newData(data, isNotification) {
+  console.log('new data', isNotification, data);
+}
