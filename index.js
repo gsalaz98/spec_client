@@ -1,13 +1,11 @@
 var noble = require('noble');
 const serviceUUID = '3e400001b5a3f393e0a9e50e24dcca9e'
-const maxValueSize = 20;
+const MAX_CHARACTERISTIC_SIZE = 20
 
 const responses = [
   new Buffer('200000470a450801124104ba9cb363577a8e21555f34e72feb37394f59e3216c46b10a5547d50bdbc89877177045474cccdf07f6e144aedbf8bc997da7ec8871a0b7144d877a0f8cdab128','hex'),
-  new Buffer('0a5c08031258cd5e310a0d2e47dba288327c778870ad4b50c80087ef2b4e0e18cc948e36622b9d76bd568a6509b868c5b37a192a49f23dbf53d010a469b8aa7e87a385a0a7f34516adfc712e911d7a72bcf76030022338005e42868e302a', 'hex')
+  new Buffer('2000005E0a5c08031258cd5e310a0d2e47dba288327c778870ad4b50c80087ef2b4e0e18cc948e36622b9d76bd568a6509b868c5b37a192a49f23dbf53d010a469b8aa7e87a385a0a7f34516adfc712e911d7a72bcf76030022338005e42868e302a', 'hex')
 ];
-
-var step = 0;
 
 var writeCharacteristic = null;
 
@@ -48,38 +46,66 @@ noble.on('discover', function(peripheral) {
 
 function handleCharacteristics(error, characteristics) {
   characteristics.forEach(function(characteristic) {
-    console.log('characteristic', characteristic.uuid);
     if (characteristic.properties.includes('write')) {
+      console.log('characteristic', characteristic.uuid, 'saved');
       writeCharacteristic = characteristic;
-      sendMessage();
+      sendMessage(responses[0]);
     } else if (characteristic.properties.includes('indicate')) {
-      characteristic.on('data', newData);
-      console.log('subscribed!');
+      characteristic.on('data', readChunk);
+      console.log('characteristic', characteristic.uuid, 'subscribed');
       characteristic.subscribe();
     }
   });
 }
 
-function sendMessage() {
-  const message = responses[step];
+function sendMessage(message) {
+  console.log('sendMessage', message.toString('hex'));
   var cursor = 0;
+  var end, chunk;
 
-  var changeInterval = setInterval(function() {
-    var end = Math.min(cursor + maxValueSize, message.length)
-    var data = message.slice(cursor, end)
-    cursor = end
-
-    console.log('sending', data);
-    writeCharacteristic.write(data);
-
-    if (cursor >= message.length) {
-      step++;
-      clearInterval(changeInterval);
-      return false;
+  function sendChunk() {
+    if (cursor < message.length) {
+      end = Math.min(cursor + MAX_CHARACTERISTIC_SIZE, message.length);
+      chunk = message.slice(cursor, end);
+      cursor = end;
+      console.log('sendChunk', chunk.toString('hex'));
+      writeCharacteristic.write(chunk, false, sendChunk);
     }
-  }, 1000);
+  }
+
+  sendChunk();
 }
 
-function newData(data, isNotification) {
-  console.log('new data', data);
+var incompleteData = null;
+var bytesRemaining = 0;
+function readChunk(chunk) {
+  console.log('readChunk', chunk.toString('hex'));
+
+  if (incompleteData) {
+    var totalLength = incompleteData[3] + 4;
+    var bytesRemain = totalLength - incompleteData.length;
+
+    if (bytesRemain > 0) {
+      var sliceSize = Math.min(chunk.length, bytesRemain)
+      var car = chunk.slice(0, sliceSize)
+      var cdr = chunk.slice(sliceSize, chunk.length)
+      incompleteData = Buffer.concat([incompleteData, car]);
+      bytesRemain = totalLength - incompleteData.length;
+      chunk = cdr;
+    }
+
+    if (bytesRemain === 0) {
+	    completeMessage(incompleteData);
+      incompleteData = chunk;
+    }
+  } else {
+    incompleteData = chunk;
+  }
+
+  console.log('incompleteData', incompleteData.toString('hex'));
+}
+
+function completeMessage(buffer) {
+  console.log('completeMessage', buffer.toString('hex'));
+  sendMessage(responses[1]);
 }
