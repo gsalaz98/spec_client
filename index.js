@@ -23,7 +23,6 @@ noble.on('stateChange', function(state) {
 });
 
 noble.on('discover', function(peripheral) {
-
   if (peripheral.advertisement.manufacturerData && peripheral.advertisement.manufacturerData.compare(modes['pair']) === 0) {
     console.log('peripheral found', peripheral.advertisement)
     noble.stopScanning();
@@ -44,6 +43,24 @@ noble.on('discover', function(peripheral) {
   }
 });
 
+function sendMessage(message) {
+  console.log('sendMessage', message.toString('hex'));
+  var cursor = 0;
+  var end, chunk;
+
+  function sendChunk() {
+    if (cursor < message.length) {
+      end = Math.min(cursor + MAX_CHARACTERISTIC_SIZE, message.length);
+      chunk = message.slice(cursor, end);
+      cursor = end;
+      console.log("\tsendChunk", chunk.toString('hex'));
+      writeCharacteristic.write(chunk, false, sendChunk);
+    }
+  }
+
+  sendChunk();
+}
+
 function handleCharacteristics(error, characteristics) {
   characteristics.forEach(function(characteristic) {
     if (characteristic.properties.includes('write')) {
@@ -56,32 +73,16 @@ function handleCharacteristics(error, characteristics) {
       characteristic.subscribe();
     }
   });
+
+  console.log('-----');
 }
 
-function sendMessage(message) {
-  console.log('sendMessage', message.toString('hex'));
-  var cursor = 0;
-  var end, chunk;
-
-  function sendChunk() {
-    if (cursor < message.length) {
-      end = Math.min(cursor + MAX_CHARACTERISTIC_SIZE, message.length);
-      chunk = message.slice(cursor, end);
-      cursor = end;
-      console.log('sendChunk', chunk.toString('hex'));
-      writeCharacteristic.write(chunk, false, sendChunk);
-    }
-  }
-
-  sendChunk();
-}
-
-var incompleteData = null;
+var incompleteData = Buffer.alloc(0);
 var bytesRemaining = 0;
-function readChunk(chunk) {
-  console.log('readChunk', chunk.toString('hex'));
+function readChunk(chunk, isNotification) {
+  console.log("\treadChunk", chunk.toString('hex'));
 
-  if (incompleteData) {
+  if (incompleteData && incompleteData.length > 3) {
     var totalLength = incompleteData[3] + 4;
     var bytesRemain = totalLength - incompleteData.length;
 
@@ -99,13 +100,18 @@ function readChunk(chunk) {
       incompleteData = chunk;
     }
   } else {
-    incompleteData = chunk;
+    // This glosses over when the chunk has multiple messages < 20 bytes
+    incompleteData = Buffer.concat([incompleteData, chunk]);
   }
 
-  console.log('incompleteData', incompleteData.toString('hex'));
+  if (incompleteData.length > 0) {
+    console.log('incompleteData', incompleteData.toString('hex'));
+  }
 }
 
 function completeMessage(buffer) {
   console.log('completeMessage', buffer.toString('hex'));
-  sendMessage(responses[1]);
+  if (buffer[3] == 0x20) {
+    sendMessage(responses[1]);
+  }
 }
