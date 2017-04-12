@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "debug": "^2.6.3",
     "noble": "^1.8.0",
     "protobufjs": "~6.7.3"
   }
