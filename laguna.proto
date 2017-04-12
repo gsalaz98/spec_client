@@ -1,0 +1,16 @@
+
+syntax = "proto3";
+package laguna;
+
+message Envelope {
+  A a = 1;
+  int32 b = 2;
+}
+
+message A {
+  int32 a = 1;
+  bytes b = 2;
+}
+
+
+

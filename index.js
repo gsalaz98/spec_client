@@ -1,10 +1,11 @@
 var noble = require('noble');
+var protobuf = require("protobufjs");
 const serviceUUID = '3e400001b5a3f393e0a9e50e24dcca9e'
 const MAX_CHARACTERISTIC_SIZE = 20
 
 const responses = [
   new Buffer('200000470a450801124104ba9cb363577a8e21555f34e72feb37394f59e3216c46b10a5547d50bdbc89877177045474cccdf07f6e144aedbf8bc997da7ec8871a0b7144d877a0f8cdab128','hex'),
-  new Buffer('2000005E0a5c08031258cd5e310a0d2e47dba288327c778870ad4b50c80087ef2b4e0e18cc948e36622b9d76bd568a6509b868c5b37a192a49f23dbf53d010a469b8aa7e87a385a0a7f34516adfc712e911d7a72bcf76030022338005e42868e302a', 'hex')
+  new Buffer('2000005e0a5c08031258cd5e310a0d2e47dba288327c778870ad4b50c80087ef2b4e0e18cc948e36622b9d76bd568a6509b888059d57a030ae51e360e7e32b159cc873e08ed198a66d74d8bc12ef0f786610b9a054effc8ef88a026028487f81d369', 'hex')
 ];
 
 var writeCharacteristic = null;
@@ -28,6 +29,7 @@ noble.on('discover', function(peripheral) {
     noble.stopScanning();
 
     peripheral.on('disconnect', function() {
+      console.log('disconnected, exiting');
       process.exit(0);
     });
 
@@ -66,7 +68,6 @@ function handleCharacteristics(error, characteristics) {
     if (characteristic.properties.includes('write')) {
       console.log('characteristic', characteristic.uuid, 'saved');
       writeCharacteristic = characteristic;
-      sendMessage(responses[0]);
     } else if (characteristic.properties.includes('indicate')) {
       characteristic.on('data', readChunk);
       console.log('characteristic', characteristic.uuid, 'subscribed');
@@ -75,6 +76,9 @@ function handleCharacteristics(error, characteristics) {
   });
 
   console.log('-----');
+  if (writeCharacteristic) {
+    sendMessage(responses[0]);
+  }
 }
 
 var incompleteData = Buffer.alloc(0);
@@ -96,7 +100,7 @@ function readChunk(chunk, isNotification) {
     }
 
     if (bytesRemain === 0) {
-	    completeMessage(incompleteData);
+      completeMessage(incompleteData);
       incompleteData = chunk;
     }
   } else {
@@ -111,6 +115,11 @@ function readChunk(chunk, isNotification) {
 
 function completeMessage(buffer) {
   console.log('completeMessage', buffer.toString('hex'));
+  protobuf.load("laguna.proto", function withProtocol(err, root) {
+    var Envelope = root.lookupType("laguna.Envelope");
+    var decodedMessage = Envelope.decode(buffer.slice(4));
+    console.log('decoded', decodedMessage);
+  });
   if (buffer[3] == 0x20) {
     sendMessage(responses[1]);
   }
