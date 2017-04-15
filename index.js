@@ -59,9 +59,6 @@ function sendMessage(message) {
       writeCharacteristic.write(chunk, false, sendChunk);
     }
   }
-
-  debug('=>');
-  decode(message);
   sendChunk();
 }
 
@@ -107,14 +104,40 @@ function readChunk(chunk, isNotification) {
 }
 
 function completeMessage(buffer) {
-  debug('<=');
 	decode(buffer).then(function(messageList) {
     messageList.forEach(function(decodedMessage) {
       if (decodedMessage.a.a === 2) {
-			  sendMessage(responses[1]);
+        const header = new Buffer(headerHex, 'hex');
+				const prefix = new Buffer('cd5e310a0d2e47dba288327c778870ad', 'hex');
+				const postfix = new Buffer('bd8ee3bffdebaf0cca76f93dc6939acbf48145d073d8f883a6fa2e5d125377afc31189559bfb74a6831f1d7945108b5a', 'hex');
+        var stageThree = {
+          a: {
+            a: 3,
+            b: Buffer.concat([prefix, decodedMessage.a.b, postfix])
+          }
+        };
+
+        encode([stageThree]).then((buffers) => {
+          var complete = buffers.reduce((acc, buffer) => {
+            return Buffer.concat([acc, header, buffer]);
+          }, Buffer.alloc(0));
+
+			  	sendMessage(complete);
+        });
       }
 	  });
 	});
+}
+
+function encode(payloads) {
+  return protobuf.load("laguna.proto").then((root) => {
+    var Envelope = root.lookupType("laguna.Envelope");
+    return payloads.map((payload) => {
+      var message = Envelope.create(payload);
+      debug('encodedMessage', message);
+      return Envelope.encodeDelimited(message).finish();
+    });
+  });
 }
 
 function decode(buffer) {
@@ -122,7 +145,7 @@ function decode(buffer) {
     var Envelope = root.lookupType("laguna.Envelope");
     var lastIndex = 0;
     var list = [];
-    debug('raw', buffer.toString('hex'));
+    //debug('raw', buffer.toString('hex'));
     do {
       lastIndex += 3;//header
       var message = buffer.slice(lastIndex);
