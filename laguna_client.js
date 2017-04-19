@@ -10,10 +10,14 @@ const header = new Buffer(headerHex, 'hex');
 
 class LagunaClient {
   constructor() {
+    this.hmacSecret = Buffer.from([0x20, 0x54, 0x50]);
     this.publicKey = ecdh.generateKeys();
+
     this.app_uuid = new Buffer('cd5e310a0d2e47dba288327c778870ad', 'hex');
     this.app_nonce = crypto.randomBytes(16);
-    this.hmacSecret = Buffer.from([0x20, 0x54, 0x50]);
+
+    this.rxNonce = crypto.randomBytes(16);
+    this.rxSalt = crypto.randomBytes(32);
 
     this.incompleteData = Buffer.alloc(0);
     this.bytesRemaining = 0;
@@ -72,6 +76,12 @@ class LagunaClient {
             case 3:
               this.checkEyewearVerification(decodedMessage.a.b);
               break;
+            case 8:
+              this.txNonce = decodedMessage.a.b;
+              break;
+            case 9:
+              this.txSalt = decodedMessage.a.b;
+              break;
           }
         }
       });
@@ -105,17 +115,40 @@ class LagunaClient {
     const sig = message.slice(24);
     const hmac = crypto.createHmac('sha256', this.hmacSecret);
     hmac.update(Buffer.concat([spec_uuid, app_nonce, this.sharedSecret]));
-    debug('hmacs', sig, hmac.digest('hex'));
+    const digest = hmac.digest('hex');
+    if (sig.toString('hex') === digest) {
+      this.sendRxSaltAndNonce();
+    } else {
+      debug('hmacs not equal', sig.toString('hex'), hmac.digest('hex'));
+    }
   }
 
   sendPublicKey() {
-    var stageOne = {
+    const publicKeyMessage = {
       a: {
         a: 1,
         b: this.publicKey
       }
     };
-    this.encodeAndSend([stageOne]);
+    this.encodeAndSend([publicKeyMessage]);
+  }
+
+  sendRxSaltAndNonce() {
+    const rxNonce = {
+      a: {
+        a: 8,
+        b: this.rxNonce
+      }
+    };
+
+    const rxSalt = {
+      a: {
+        a: 9,
+        b: this.rxSalt
+      }
+    };
+
+    this.encodeAndSend([rxNonce, rxSalt]);
   }
 
   encodeAndSend(messages) {
