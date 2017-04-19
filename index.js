@@ -11,7 +11,7 @@ const ecdh = crypto.createECDH('prime256v1');
 const publicKey = ecdh.generateKeys();
 var sharedSecret;
 const app_uuid = new Buffer('cd5e310a0d2e47dba288327c778870ad', 'hex');
-const app_nonce = new Buffer('34995efb2045c48149401d40b7cc2f5d', 'hex');
+const app_nonce = crypto.randomBytes(16);
 
 const responses = [
 	new Buffer('200000470a450801124104ba9cb363577a8e21555f34e72feb37394f59e3216c46b10a5547d50bdbc89877177045474cccdf07f6e144aedbf8bc997da7ec8871a0b7144d877a0f8cdab128','hex'),
@@ -145,8 +145,6 @@ function completeMessage(buffer) {
               sendMessage(complete);
             });
             break;
-          default:
-            console.log('unhandled decode message');
         }
 			}
 		});
