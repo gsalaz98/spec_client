@@ -126,14 +126,16 @@ function completeMessage(buffer) {
             const spec_nonce = decodedMessage.a.b.slice(8, 24)
             const secret = Buffer.from([0x20, 0x54, 0x50]);
             const hmac = crypto.createHmac('sha256', secret);
-            const base = Buffer.concat([app_uuid, spec_uuid, spec_nonce, app_nonce, sharedSecret]);
-            hmac.update(base);
-            const mac = new Buffer(hmac.digest('hex'), 'hex');
+            var message = Buffer.concat([app_uuid, spec_uuid, spec_nonce, app_nonce, sharedSecret]);
+            hmac.update(message);
+            const mac = hmac.digest('hex');
+            // Replace sharedSecret with hmac
+            message.write(mac, 0x38, 0x20, 'hex');
 
             var stageThree = {
               a: {
                 a: 3,
-                b: Buffer.concat([base, mac])
+                b: message
               }
             };
 
@@ -145,6 +147,8 @@ function completeMessage(buffer) {
               sendMessage(complete);
             });
             break;
+          case 3:
+            debug(decodedMessage.a.b.toString('hex'));
         }
 			}
 		});

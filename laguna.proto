@@ -5,6 +5,7 @@ package laguna;
 message Envelope {
   A a = 1;
   int32 b = 2;
+  string error = 3;
 }
 
 message A {
