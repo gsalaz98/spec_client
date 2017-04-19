@@ -12,108 +12,109 @@ const publicKey = ecdh.generateKeys();
 var sharedSecret;
 const app_uuid = new Buffer('cd5e310a0d2e47dba288327c778870ad', 'hex');
 const app_nonce = crypto.randomBytes(16);
+const hmacSecret = Buffer.from([0x20, 0x54, 0x50]);
 
 const responses = [
-	new Buffer('200000470a450801124104ba9cb363577a8e21555f34e72feb37394f59e3216c46b10a5547d50bdbc89877177045474cccdf07f6e144aedbf8bc997da7ec8871a0b7144d877a0f8cdab128','hex'),
-	new Buffer('2000005e0a5c08031258cd5e310a0d2e47dba288327c778870ad4b50c80087ef2b4e0e18cc948e36622b9d76bd568a6509b85b61730adea1a719e9b62a343e1094c3cadd92b76f8158357ab4abd8a75b29cb7dd541ced8a1a929629917dac0b13ebc', 'hex')
+  new Buffer('200000470a450801124104ba9cb363577a8e21555f34e72feb37394f59e3216c46b10a5547d50bdbc89877177045474cccdf07f6e144aedbf8bc997da7ec8871a0b7144d877a0f8cdab128','hex'),
+  new Buffer('2000005e0a5c08031258cd5e310a0d2e47dba288327c778870ad4b50c80087ef2b4e0e18cc948e36622b9d76bd568a6509b85b61730adea1a719e9b62a343e1094c3cadd92b76f8158357ab4abd8a75b29cb7dd541ced8a1a929629917dac0b13ebc', 'hex')
 ];
 
 var writeCharacteristic = null;
 
 const modes = {
-	pair: new Buffer('c203303430', 'hex')
+  pair: new Buffer('c203303430', 'hex')
 }
 
 noble.on('stateChange', function(state) {
-	if (state === 'poweredOn') {
-		debug(state, 'startScanning')
-		noble.startScanning();
-	} else {
-		noble.stopScanning();
-	}
+  if (state === 'poweredOn') {
+    debug(state, 'startScanning')
+    noble.startScanning();
+  } else {
+    noble.stopScanning();
+  }
 });
 
 noble.on('discover', function(peripheral) {
-	if (peripheral.advertisement.manufacturerData && peripheral.advertisement.manufacturerData.compare(modes['pair']) === 0) {
-		debug('peripheral found', peripheral.advertisement)
-		noble.stopScanning();
+  if (peripheral.advertisement.manufacturerData && peripheral.advertisement.manufacturerData.compare(modes['pair']) === 0) {
+    debug('peripheral found', peripheral.advertisement)
+    noble.stopScanning();
 
-		peripheral.on('disconnect', function() {
-			debug('disconnected, exiting');
-			process.exit(0);
-		});
+    peripheral.on('disconnect', function() {
+      debug('disconnected, exiting');
+      process.exit(0);
+    });
 
-		peripheral.connect(function(error) {
-			debug('connected');
-			peripheral.discoverServices([serviceUUID], function(error, services) {
-				services.forEach(function(service) {
-					debug('service', service.uuid);
-					service.discoverCharacteristics([], handleCharacteristics);
-				});
-			});
-		});
-	}
+    peripheral.connect(function(error) {
+      debug('connected');
+      peripheral.discoverServices([serviceUUID], function(error, services) {
+        services.forEach(function(service) {
+          debug('service', service.uuid);
+          service.discoverCharacteristics([], handleCharacteristics);
+        });
+      });
+    });
+  }
 });
 
 function sendMessage(message) {
-	var cursor = 0;
-	var end, chunk;
+  var cursor = 0;
+  var end, chunk;
 
-	function sendChunk() {
-		if (cursor < message.length) {
-			end = Math.min(cursor + MAX_CHARACTERISTIC_SIZE, message.length);
-			chunk = message.slice(cursor, end);
-			cursor = end;
-			writeCharacteristic.write(chunk, false, sendChunk);
-		}
-	}
-	sendChunk();
+  function sendChunk() {
+    if (cursor < message.length) {
+      end = Math.min(cursor + MAX_CHARACTERISTIC_SIZE, message.length);
+      chunk = message.slice(cursor, end);
+      cursor = end;
+      writeCharacteristic.write(chunk, false, sendChunk);
+    }
+  }
+  sendChunk();
 }
 
 function handleCharacteristics(error, characteristics) {
-	characteristics.forEach(function(characteristic) {
-		if (characteristic.properties.includes('write')) {
-			writeCharacteristic = characteristic;
-		} else if (characteristic.properties.includes('indicate')) {
-			characteristic.on('data', readChunk);
-			characteristic.subscribe();
-		}
-	});
+  characteristics.forEach(function(characteristic) {
+    if (characteristic.properties.includes('write')) {
+      writeCharacteristic = characteristic;
+    } else if (characteristic.properties.includes('indicate')) {
+      characteristic.on('data', readChunk);
+      characteristic.subscribe();
+    }
+  });
 
-	if (writeCharacteristic) {
-		sendPublicKey();
-	}
+  if (writeCharacteristic) {
+    sendPublicKey();
+  }
 }
 
 var incompleteData = Buffer.alloc(0);
 var bytesRemaining = 0;
 function readChunk(chunk, isNotification) {
-	if (incompleteData && incompleteData.length > 3) {
-		var totalLength = incompleteData[3] + 4;
-		var bytesRemain = totalLength - incompleteData.length;
+  if (incompleteData && incompleteData.length > 3) {
+    var totalLength = incompleteData[3] + 4;
+    var bytesRemain = totalLength - incompleteData.length;
 
-		if (bytesRemain > 0) {
-			var sliceSize = Math.min(chunk.length, bytesRemain)
-			var car = chunk.slice(0, sliceSize)
-			var cdr = chunk.slice(sliceSize, chunk.length)
-			incompleteData = Buffer.concat([incompleteData, car]);
-			bytesRemain = totalLength - incompleteData.length;
-			chunk = cdr;
-		}
+    if (bytesRemain > 0) {
+      var sliceSize = Math.min(chunk.length, bytesRemain)
+      var car = chunk.slice(0, sliceSize)
+      var cdr = chunk.slice(sliceSize, chunk.length)
+      incompleteData = Buffer.concat([incompleteData, car]);
+      bytesRemain = totalLength - incompleteData.length;
+      chunk = cdr;
+    }
 
-		if (bytesRemain === 0) {
-			completeMessage(incompleteData);
-			incompleteData = chunk;
-		}
-	} else {
-		// This glosses over when the chunk has multiple messages < 20 bytes
-		incompleteData = Buffer.concat([incompleteData, chunk]);
-	}
+    if (bytesRemain === 0) {
+      completeMessage(incompleteData);
+      incompleteData = chunk;
+    }
+  } else {
+    // This glosses over when the chunk has multiple messages < 20 bytes
+    incompleteData = Buffer.concat([incompleteData, chunk]);
+  }
 }
 
 function completeMessage(buffer) {
-	decode(buffer).then(function(messageList) {
-		messageList.forEach(function(decodedMessage) {
+  decode(buffer).then(function(messageList) {
+    messageList.forEach(function(decodedMessage) {
       if (decodedMessage.a && decodedMessage.a.a) {
         switch(decodedMessage.a.a) {
           case 1:
@@ -124,9 +125,14 @@ function completeMessage(buffer) {
           case 2:
             const spec_uuid = decodedMessage.a.b.slice(0, 8);
             const spec_nonce = decodedMessage.a.b.slice(8, 24)
-            const secret = Buffer.from([0x20, 0x54, 0x50]);
-            const hmac = crypto.createHmac('sha256', secret);
+            const hmac = crypto.createHmac('sha256', hmacSecret);
             var message = Buffer.concat([app_uuid, spec_uuid, spec_nonce, app_nonce, sharedSecret]);
+
+            debug('app_uuid', app_uuid.toString('hex'));
+            debug('spec_uuid', spec_uuid.toString('hex'));
+            debug('spec_nonce', spec_nonce.toString('hex'));
+            debug('app_nonce', app_nonce.toString('hex'));
+
             hmac.update(message);
             const mac = hmac.digest('hex');
             // Replace sharedSecret with hmac
@@ -148,55 +154,66 @@ function completeMessage(buffer) {
             });
             break;
           case 3:
-            debug(decodedMessage.a.b.toString('hex'));
+            checkEyewearVerification(decodedMessage.a.b);
         }
-			}
-		});
-	});
+      }
+    });
+  });
+}
+
+function checkEyewearVerification(message) {
+  const spec_uuid = message.slice(0, 8);
+  //const app_nonce = messageslice(8, 24)
+  const sig = message.slice(24);
+  const hmac1 = crypto.createHmac('sha256', hmacSecret);
+  hmac1.update(Buffer.concat([spec_uuid, app_nonce, sharedSecret]));
+  debug('hmacs', sig, hmac1.digest('hex'));
+
+
 }
 
 function sendPublicKey() {
-	var stageOne = {
-		a: {
-			a: 1,
-			b: publicKey
-		}
-	};
+  var stageOne = {
+    a: {
+      a: 1,
+      b: publicKey
+    }
+  };
 
-	encode([stageOne]).then((buffers) => {
-		const complete = buffers.reduce((acc, buffer) => {
-			return Buffer.concat([acc, header, buffer]);
-		}, Buffer.alloc(0));
-		sendMessage(complete);
-	});
+  encode([stageOne]).then((buffers) => {
+    const complete = buffers.reduce((acc, buffer) => {
+      return Buffer.concat([acc, header, buffer]);
+    }, Buffer.alloc(0));
+    sendMessage(complete);
+  });
 }
 
 function encode(payloads) {
-	return protobuf.load("laguna.proto").then((root) => {
-		var Envelope = root.lookupType("laguna.Envelope");
-		return payloads.map((payload) => {
-			var message = Envelope.create(payload);
-			debug('encodedMessage', message);
-			return Envelope.encodeDelimited(message).finish();
-		});
-	});
+  return protobuf.load("laguna.proto").then((root) => {
+    var Envelope = root.lookupType("laguna.Envelope");
+    return payloads.map((payload) => {
+      var message = Envelope.create(payload);
+      debug('encodedMessage', message);
+      return Envelope.encodeDelimited(message).finish();
+    });
+  });
 }
 
 function decode(buffer) {
-	return protobuf.load("laguna.proto").then(function(root) {
-		var Envelope = root.lookupType("laguna.Envelope");
-		var lastIndex = 0;
-		var list = [];
-		//debug('raw', buffer.toString('hex'));
-		do {
-			lastIndex += 3;//header
-			var message = buffer.slice(lastIndex);
-			var decodedMessage = Envelope.decodeDelimited(message);
-			debug('decodedMessage', decodedMessage);
-			list.push(decodedMessage);
-			lastIndex = buffer.indexOf(headerHex, lastIndex, 'hex')
-		} while (lastIndex != -1)
+  return protobuf.load("laguna.proto").then(function(root) {
+    var Envelope = root.lookupType("laguna.Envelope");
+    var lastIndex = 0;
+    var list = [];
+    //debug('raw', buffer.toString('hex'));
+    do {
+      lastIndex += 3;//header
+      var message = buffer.slice(lastIndex);
+      var decodedMessage = Envelope.decodeDelimited(message);
+      debug('decodedMessage', decodedMessage);
+      list.push(decodedMessage);
+      lastIndex = buffer.indexOf(headerHex, lastIndex, 'hex')
+    } while (lastIndex != -1)
 
-			return list;
-	});
+      return list;
+  });
 };
