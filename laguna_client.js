@@ -1,6 +1,7 @@
 var protobuf = require("protobufjs");
 var debug = require('debug')('LagunaClient');
 const crypto = require('crypto');
+const LagunaMessage = require('./laguna_message');
 
 const ecdh = crypto.createECDH('prime256v1');
 
@@ -19,7 +20,7 @@ class LagunaClient {
     this.rxNonce = crypto.randomBytes(16);
     this.rxSalt = crypto.randomBytes(32);
 
-    this.incompleteData = Buffer.alloc(0);
+    this.incompleteMessage = Buffer.alloc(0)
     this.bytesRemaining = 0;
   }
 
@@ -38,55 +39,46 @@ class LagunaClient {
     sendChunk();
   }
 
-  readChunk(chunk, isNotification) {
-    if (this.incompleteData && this.incompleteData.length > 3) {
-      var totalLength = this.incompleteData[3] + 4;
-      var bytesRemain = totalLength - this.incompleteData.length;
+  readChunk(chunk) {
+    debug('chunk', chunk.toString('hex'));
+    this.incompleteMessage = Buffer.concat([this.incompleteMessage, chunk]);
 
-      if (bytesRemain > 0) {
-        var sliceSize = Math.min(chunk.length, bytesRemain)
-        var car = chunk.slice(0, sliceSize)
-        var cdr = chunk.slice(sliceSize, chunk.length)
-        this.incompleteData = Buffer.concat([this.incompleteData, car]);
-        bytesRemain = totalLength - this.incompleteData.length;
-        chunk = cdr;
-      }
+    if (this.incompleteMessage.length > 2) {
+      const length = this.incompleteMessage[3];
+      if (this.incompleteMessage.length >= length + 4) {
 
-      if (bytesRemain === 0) {
-        this.completeMessage(this.incompleteData);
-        this.incompleteData = chunk;
+        var m = new LagunaMessage(this.incompleteMessage.slice(0, length + 4));
+        if (m.encrypted()) {
+          m = m.decrypt(this.sharedSecret, this.rxSalt, this.rxNonce);
+        }
+        this.completeMessage(m.decode());
+
+        this.incompleteMessage = this.incompleteMessage.slice(length + 4);
       }
-    } else {
-      // This glosses over when the chunk has multiple messages < 20 bytes
-      this.incompleteData = Buffer.concat([this.incompleteData, chunk]);
     }
   }
 
-  completeMessage(buffer) {
-    this.decode(buffer).then((messageList) => {
-      messageList.forEach((decodedMessage) => {
-        if (decodedMessage.a && decodedMessage.a.a) {
-          switch(decodedMessage.a.a) {
-            case 1:
-              this.sharedSecret = ecdh.computeSecret(decodedMessage.a.b);
-              break;
-            case 2:
-              this.sendAppVerification(decodedMessage.a.b);
-              break;
-            case 3:
-              this.checkEyewearVerification(decodedMessage.a.b);
-              break;
-            case 8:
-              this.txNonce = decodedMessage.a.b;
-              break;
-            case 9:
-              this.txSalt = decodedMessage.a.b;
-              this.sendTens();
-              break;
-          }
-        }
-      });
-    });
+  completeMessage(decodedMessage) {
+		if (decodedMessage.a && decodedMessage.a.a) {
+			switch(decodedMessage.a.a) {
+				case 1:
+					this.sharedSecret = ecdh.computeSecret(decodedMessage.a.b);
+					break;
+				case 2:
+					this.sendAppVerification(decodedMessage.a.b);
+					break;
+				case 3:
+					this.checkEyewearVerification(decodedMessage.a.b);
+					break;
+				case 8:
+					this.txNonce = decodedMessage.a.b;
+					break;
+				case 9:
+					this.txSalt = decodedMessage.a.b;
+					this.sendTens();
+					break;
+			}
+		}
   }
 
   sendTens() {
@@ -164,46 +156,14 @@ class LagunaClient {
     this.encodeAndSend([rxNonce, rxSalt]);
   }
 
-  encodeAndSend(messages) {
-    this.encode(messages).then((buffers) => {
-      const complete = buffers.reduce((acc, buffer) => {
-        return Buffer.concat([acc, header, buffer]);
-      }, Buffer.alloc(0));
-      this.sendMessage(complete);
-    });
+  encodeAndSend(objs) {
+    var all = objs.reduce((acc, obj) => {
+      const newMessage = LagunaMessage.fromObject(obj);
+      return Buffer.concat([acc, newMessage.raw()]);
+    }, Buffer.alloc(0));
+
+    this.sendMessage(all);
   }
-
-  encode(payloads) {
-    return protobuf.load("laguna.proto").then((root) => {
-      var Envelope = root.lookupType("laguna.Envelope");
-      return payloads.map((payload) => {
-        var message = Envelope.create(payload);
-        debug('encodedMessage', message);
-        return Envelope.encodeDelimited(message).finish();
-      });
-    });
-  }
-
-  decode(buffer) {
-    return protobuf.load("laguna.proto").then((root) => {
-      var Envelope = root.lookupType("laguna.Envelope");
-      var lastIndex = 0;
-      var list = [];
-      //debug('raw', buffer.toString('hex'));
-      do {
-        lastIndex += 3;//header
-        var message = buffer.slice(lastIndex);
-        var decodedMessage = Envelope.decodeDelimited(message);
-        debug('decodedMessage', decodedMessage);
-        list.push(decodedMessage);
-        lastIndex = buffer.indexOf(headerHex, lastIndex, 'hex')
-      } while (lastIndex != -1)
-
-        return list;
-    });
-  }
-
 }
-
 
 module.exports = LagunaClient;
