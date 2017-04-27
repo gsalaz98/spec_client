@@ -81,11 +81,24 @@ class LagunaClient {
               break;
             case 9:
               this.txSalt = decodedMessage.a.b;
+              this.sendTens();
               break;
           }
         }
       });
     });
+  }
+
+  sendTens() {
+    var tens = {
+      c: [
+        { a: 7 },
+        { a: 6 },
+        { a: 1 }
+      ]
+    };
+
+    this.encodeAndSend([tens]);
   }
 
   sendAppVerification(message) {
