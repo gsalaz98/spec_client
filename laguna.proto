@@ -6,6 +6,7 @@ message Envelope {
   A a = 1;
   int32 b = 2;
   string error = 3;
+  repeated C c = 10;
 }
 
 message A {
@@ -13,5 +14,8 @@ message A {
   bytes b = 2;
 }
 
+message C {
+  int32 a = 1;
+}
 
 
