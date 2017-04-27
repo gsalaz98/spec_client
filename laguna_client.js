@@ -90,7 +90,7 @@ class LagunaClient {
       ]
     };
 
-    this.encodeAndSend([tens]);
+    this.encodeAndSend([tens], true);
   }
 
   sendAppVerification(message) {
@@ -156,9 +156,10 @@ class LagunaClient {
     this.encodeAndSend([rxNonce, rxSalt]);
   }
 
-  encodeAndSend(objs) {
+  encodeAndSend(objs, encrypt) {
     var all = objs.reduce((acc, obj) => {
       const newMessage = LagunaMessage.fromObject(obj);
+      if (encrypt) newMessage.encrypt(this.sharedSecret, this.txSalt, this.txNonce);
       return Buffer.concat([acc, newMessage.raw()]);
     }, Buffer.alloc(0));
 

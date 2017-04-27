@@ -43,7 +43,28 @@ class LagunaMessage {
     }
 
     this.content = result;
-    debug('decrypted', result.toString('hex'));
+    this.type = 0;
+    this.totalLength = this.content.length;
+    debug('decrypted', this.content.toString('hex'));
+    return this;
+  }
+
+  encrypt(sharedSecret, txSalt, txNonce) {
+    const hmacKey = this.sign(sharedSecret.slice(0, blockSize), txSalt);
+    const key = this._crypt(sharedSecret, txNonce);
+
+    //XXX: only works for the first 16 bytes
+    const result = Buffer.alloc(this.content.length);
+    for (var i = 0; i < this.content.length; i++) {
+      result[i] = this.content[i] ^ key[i];
+    }
+
+    const mac = this.sign(hmacKey, result).slice(0, blockSize);
+
+    this.content = Buffer.concat([result, mac]);
+    this.type = 0x10;
+    this.totalLength = this.content.length;
+    debug('encrypted', this.content.toString('hex'));
     return this;
   }
 
