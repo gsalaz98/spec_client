@@ -116,6 +116,16 @@ class LagunaClient {
     this.encodeAndSend([stageThree]);
   }
 
+  sendPublicKey() {
+    const publicKeyMessage = {
+      encryptionSetup: {
+        stage: 1,
+        content: this.publicKey
+      }
+    };
+    this.encodeAndSend([publicKeyMessage]);
+  }
+
   checkEyewearVerification(message) {
     const spec_uuid = message.slice(0, 8);
     const app_nonce = message.slice(8, 24)
@@ -126,16 +136,6 @@ class LagunaClient {
     } else {
       debug('hmacs not equal', sig.toString('hex'), mac.toString('hex'));
     }
-  }
-
-  sendPublicKey() {
-    const publicKeyMessage = {
-      encryptionSetup: {
-        stage: 1,
-        content: this.publicKey
-      }
-    };
-    this.encodeAndSend([publicKeyMessage]);
   }
 
   sendTxSaltAndNonce() {
