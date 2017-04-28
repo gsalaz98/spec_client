@@ -12,7 +12,7 @@ class Cryption {
     this.hmacKey = this.sign(this.sharedSecret, this.salt);
     this.key = this._encrypt(this.sharedSecret, this.nonce);
     this.counter = 0;
-    debug('Cryption', {sharedSecret, nonce, salt});
+    //debug('Cryption', {sharedSecret, nonce, salt});
   }
 
   encrypt(lagunaMessage) {
@@ -23,7 +23,7 @@ class Cryption {
     const result = this.xor(lagunaMessage.content);
     const mac = this.sign(this.hmacKey, result).slice(0, blockSize);
 
-    debug('encrypt', result);
+    //debug('encrypt', result);
 
     lagunaMessage.content = Buffer.concat([result, mac]);
     lagunaMessage.type = 0x10;
@@ -49,7 +49,7 @@ class Cryption {
     }
     const result = this.xor(content);
 
-    debug('decrypt', result);
+    //debug('decrypt', result);
 
     lagunaMessage.content = result;
     lagunaMessage.type = 0x00;
@@ -68,7 +68,7 @@ class Cryption {
       }
     }
 
-    debug('xor', result);
+    //debug('xor', result);
     return result;
   }
 
