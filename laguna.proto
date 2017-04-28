@@ -2,22 +2,25 @@
 syntax = "proto3";
 package laguna;
 
-message Envelope {
-  A a = 1;
+message Envelope { // lmi / lmh
+  EncryptionSetup es = 1;
   int32 b = 2;
   string error = 3;
-  int32 d = 4;
+  int32 battery = 4;
+
+  //lnk
   int32 e = 11;
   repeated C c = 10;
   string version = 16;
   bytes f = 17;
 }
 
-message A {
-  int32 a = 1;
-  bytes b = 2;
+message EncryptionSetup { //lmg
+  int32 stage = 1;
+  bytes content = 2;
 }
 
 message C {
   int32 a = 1;
 }
+
