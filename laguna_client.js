@@ -2,12 +2,10 @@ var protobuf = require("protobufjs");
 var debug = require('debug')('LagunaClient');
 const crypto = require('crypto');
 const LagunaMessage = require('./laguna_message');
-
+const Cryption = require('./cryption');
 const ecdh = crypto.createECDH('prime256v1');
 
 const MAX_CHARACTERISTIC_SIZE = 20
-const headerHex = '200000';
-const header = new Buffer(headerHex, 'hex');
 
 class LagunaClient {
   constructor() {
@@ -17,8 +15,8 @@ class LagunaClient {
     this.app_uuid = new Buffer('cd5e310a0d2e47dba288327c778870ad', 'hex');
     this.app_nonce = crypto.randomBytes(16);
 
-    this.rxNonce = crypto.randomBytes(16);
-    this.rxSalt = crypto.randomBytes(32);
+    this.txNonce = crypto.randomBytes(16);
+    this.txSalt = crypto.randomBytes(32);
 
     this.incompleteMessage = Buffer.alloc(0)
     this.bytesRemaining = 0;
@@ -33,6 +31,7 @@ class LagunaClient {
         end = Math.min(cursor + MAX_CHARACTERISTIC_SIZE, message.length);
         chunk = message.slice(cursor, end);
         cursor = end;
+        debug('send chunk', chunk.toString('hex'));
         this.writeCharacteristic.write(chunk, false, sendChunk);
       }
     }
@@ -40,7 +39,7 @@ class LagunaClient {
   }
 
   readChunk(chunk) {
-    debug('chunk', chunk.toString('hex'));
+    debug('read chunk', chunk.toString('hex'));
     this.incompleteMessage = Buffer.concat([this.incompleteMessage, chunk]);
 
     if (this.incompleteMessage.length > 2) {
@@ -49,7 +48,7 @@ class LagunaClient {
 
         var m = new LagunaMessage(this.incompleteMessage.slice(0, length + 4));
         if (m.encrypted()) {
-          m = m.decrypt(this.sharedSecret, this.rxSalt, this.rxNonce);
+          m = this.rxCryption.decrypt(m);
         }
         this.completeMessage(m.decode());
 
@@ -63,6 +62,7 @@ class LagunaClient {
 			switch(decodedMessage.a.a) {
 				case 1:
 					this.sharedSecret = ecdh.computeSecret(decodedMessage.a.b);
+          this.txCryption = new Cryption(this.sharedSecret, this.txNonce, this.txSalt);
 					break;
 				case 2:
 					this.sendAppVerification(decodedMessage.a.b);
@@ -71,10 +71,11 @@ class LagunaClient {
 					this.checkEyewearVerification(decodedMessage.a.b);
 					break;
 				case 8:
-					this.txNonce = decodedMessage.a.b;
+					this.rxNonce = decodedMessage.a.b;
 					break;
 				case 9:
-					this.txSalt = decodedMessage.a.b;
+					this.rxSalt = decodedMessage.a.b;
+          this.rxCryption = new Cryption(this.sharedSecret, this.rxNonce, this.rxSalt);
 					this.sendTens();
 					break;
 			}
@@ -96,13 +97,10 @@ class LagunaClient {
   sendAppVerification(message) {
     const spec_uuid = message.slice(0, 8);
     const spec_nonce = message.slice(8, 24)
-    const hmac = crypto.createHmac('sha256', this.hmacSecret);
     var reply = Buffer.concat([this.app_uuid, spec_uuid, spec_nonce, this.app_nonce, this.sharedSecret]);
-
-    hmac.update(reply);
-    const mac = hmac.digest('hex');
+    const mac = this.txCryption.sign(this.hmacSecret, reply);
     // Replace sharedSecret with hmac
-    reply.write(mac, 0x38, 0x20, 'hex');
+    reply.write(mac.toString('hex'), 0x38, 0x20, 'hex');
 
     var stageThree = {
       a: {
@@ -118,13 +116,11 @@ class LagunaClient {
     const spec_uuid = message.slice(0, 8);
     const app_nonce = message.slice(8, 24)
     const sig = message.slice(24);
-    const hmac = crypto.createHmac('sha256', this.hmacSecret);
-    hmac.update(Buffer.concat([spec_uuid, app_nonce, this.sharedSecret]));
-    const digest = hmac.digest('hex');
-    if (sig.toString('hex') === digest) {
-      this.sendRxSaltAndNonce();
+    const mac = this.txCryption.sign(this.hmacSecret, Buffer.concat([spec_uuid, app_nonce, this.sharedSecret]));
+    if (sig.toString('hex') === mac.toString('hex')) {
+      this.sendTxSaltAndNonce();
     } else {
-      debug('hmacs not equal', sig.toString('hex'), hmac.digest('hex'));
+      debug('hmacs not equal', sig.toString('hex'), mac.toString('hex'));
     }
   }
 
@@ -138,28 +134,30 @@ class LagunaClient {
     this.encodeAndSend([publicKeyMessage]);
   }
 
-  sendRxSaltAndNonce() {
-    const rxNonce = {
+  sendTxSaltAndNonce() {
+    const txNonce = {
       a: {
         a: 8,
-        b: this.rxNonce
+        b: this.txNonce
       }
     };
 
-    const rxSalt = {
+    const txSalt = {
       a: {
         a: 9,
-        b: this.rxSalt
+        b: this.txSalt
       }
     };
 
-    this.encodeAndSend([rxNonce, rxSalt]);
+    this.encodeAndSend([txNonce, txSalt]);
   }
 
   encodeAndSend(objs, encrypt) {
     var all = objs.reduce((acc, obj) => {
-      const newMessage = LagunaMessage.fromObject(obj);
-      if (encrypt) newMessage.encrypt(this.sharedSecret, this.txSalt, this.txNonce);
+      let newMessage = LagunaMessage.fromObject(obj);
+      if (encrypt) {
+        newMessage = this.txCryption.encrypt(newMessage);
+      }
       return Buffer.concat([acc, newMessage.raw()]);
     }, Buffer.alloc(0));
 
