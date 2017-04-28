@@ -5,8 +5,6 @@ const protobuf = require("protobufjs");
 const root = protobuf.loadSync('laguna.proto');
 const Envelope = root.lookupType("laguna.Envelope");
 const algorithm = 'aes128';
-const blockSize = 0x10;
-const iv = Buffer.alloc(blockSize);
 
 class LagunaMessage {
   constructor(data) {
@@ -38,8 +36,8 @@ class LagunaMessage {
 
   static fromObject(obj) {
     const message = Envelope.create(obj);
-    debug('fromObject', message);
     const content = Envelope.encode(message).finish();
+    debug('fromObject', message, content);
     const header = Buffer.from([0x20, 0x00, 0x00, content.length]);
     return new LagunaMessage(Buffer.concat([header, content]));
   }

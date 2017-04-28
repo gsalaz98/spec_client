@@ -61,23 +61,24 @@ class LagunaClient {
     if (!decodedMessage) {
       return;
     }
-    if (decodedMessage.a && decodedMessage.a.a) {
-      switch(decodedMessage.a.a) {
+    if (decodedMessage.encryptionSetup && decodedMessage.encryptionSetup.stage) {
+      const { stage, content } = decodedMessage.encryptionSetup;
+      switch(stage) {
         case 1:
-          this.sharedSecret = ecdh.computeSecret(decodedMessage.a.b);
+          this.sharedSecret = ecdh.computeSecret(content);
           this.txCryption = new Cryption(this.sharedSecret, this.txNonce, this.txSalt);
           break;
         case 2:
-          this.sendAppVerification(decodedMessage.a.b);
+          this.sendAppVerification(content);
           break;
         case 3:
-          this.checkEyewearVerification(decodedMessage.a.b);
+          this.checkEyewearVerification(content);
           break;
         case 8:
-          this.rxNonce = decodedMessage.a.b;
+          this.rxNonce = content;
           break;
         case 9:
-          this.rxSalt = decodedMessage.a.b;
+          this.rxSalt = content;
           this.rxCryption = new Cryption(this.sharedSecret, this.rxNonce, this.rxSalt);
           this.sendTens();
           break;
@@ -106,9 +107,9 @@ class LagunaClient {
     reply.write(mac.toString('hex'), 0x38, 0x20, 'hex');
 
     var stageThree = {
-      a: {
-        a: 3,
-        b: reply
+      encryptionSetup: {
+        stage: 3,
+        content: reply
       }
     };
 
@@ -129,9 +130,9 @@ class LagunaClient {
 
   sendPublicKey() {
     const publicKeyMessage = {
-      a: {
-        a: 1,
-        b: this.publicKey
+      encryptionSetup: {
+        stage: 1,
+        content: this.publicKey
       }
     };
     this.encodeAndSend([publicKeyMessage]);
@@ -139,16 +140,16 @@ class LagunaClient {
 
   sendTxSaltAndNonce() {
     const txNonce = {
-      a: {
-        a: 8,
-        b: this.txNonce
+      encryptionSetup: {
+        stage: 8,
+        content: this.txNonce
       }
     };
 
     const txSalt = {
-      a: {
-        a: 9,
-        b: this.txSalt
+      encryptionSetup: {
+        stage: 9,
+        content: this.txSalt
       }
     };
 

@@ -3,7 +3,7 @@ syntax = "proto3";
 package laguna;
 
 message Envelope { // lmi / lmh
-  EncryptionSetup es = 1;
+  EncryptionSetup encryptionSetup = 1;
   int32 b = 2;
   string error = 3;
   int32 battery = 4;
