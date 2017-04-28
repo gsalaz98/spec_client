@@ -6,7 +6,11 @@ message Envelope {
   A a = 1;
   int32 b = 2;
   string error = 3;
+  int32 d = 4;
+  int32 e = 11;
   repeated C c = 10;
+  string version = 16;
+  bytes f = 17;
 }
 
 message A {
@@ -17,5 +21,3 @@ message A {
 message C {
   int32 a = 1;
 }
-
-
