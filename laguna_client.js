@@ -58,6 +58,9 @@ class LagunaClient {
   }
 
   completeMessage(decodedMessage) {
+    if (!decodedMessage) {
+      return;
+    }
 		if (decodedMessage.a && decodedMessage.a.a) {
 			switch(decodedMessage.a.a) {
 				case 1:

@@ -22,9 +22,13 @@ class LagunaMessage {
   }
 
   decode() {
-    var decodedMessage = Envelope.decode(this.content);
-    debug('decodedMessage', decodedMessage);
-    return decodedMessage;
+    try {
+      var decodedMessage = Envelope.decode(this.content);
+      debug('decodedMessage', decodedMessage);
+      return decodedMessage;
+    } catch (e) {
+      debug('Exception during decode', e);
+    }
   }
 
   raw() {
