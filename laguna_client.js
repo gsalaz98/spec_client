@@ -1,18 +1,23 @@
 var protobuf = require("protobufjs");
 var debug = require('debug')('LagunaClient');
 const crypto = require('crypto');
+const low = require('lowdb');
+const db = low('db.json');
 const LagunaMessage = require('./laguna_message');
 const Cryption = require('./cryption');
 const ecdh = crypto.createECDH('prime256v1');
 
-const MAX_CHARACTERISTIC_SIZE = 20
+db.defaults({
+  app_uuid: new Buffer('cd5e310a0d2e47dba288327c778870ad', 'hex'),
+}).write();
+
 
 class LagunaClient {
   constructor() {
     this.hmacSecret = Buffer.from([0x20, 0x54, 0x50]);
-    this.publicKey = ecdh.generateKeys();
+    this.public_key = ecdh.generateKeys();
 
-    this.app_uuid = new Buffer('cd5e310a0d2e47dba288327c778870ad', 'hex');
+    this.app_uuid = Buffer.from(db.get('app_uuid').value());
     this.app_nonce = crypto.randomBytes(16);
 
     this.txNonce = crypto.randomBytes(16);
@@ -23,6 +28,7 @@ class LagunaClient {
   }
 
   sendMessage(message) {
+    const MAX_CHARACTERISTIC_SIZE = 20
     var cursor = 0;
     var end, chunk;
 
@@ -66,6 +72,7 @@ class LagunaClient {
       switch(stage) {
         case 1:
           this.sharedSecret = ecdh.computeSecret(content);
+          db.set('sharedSecret', this.sharedSecret).write();
           this.txCryption = new Cryption(this.sharedSecret, this.txNonce, this.txSalt);
           break;
         case 2:
@@ -76,9 +83,11 @@ class LagunaClient {
           break;
         case 8:
           this.rxNonce = content;
+          db.set('rxNonce', this.rxNonce).write();
           break;
         case 9:
           this.rxSalt = content;
+          db.set('rxSalt', this.rxSalt).write();
           this.rxCryption = new Cryption(this.sharedSecret, this.rxNonce, this.rxSalt);
           this.sendTens();
           break;
@@ -120,7 +129,7 @@ class LagunaClient {
     const publicKeyMessage = {
       encryptionSetup: {
         stage: 1,
-        content: this.publicKey
+        content: this.public_key
       }
     };
     this.encodeAndSend([publicKeyMessage]);
