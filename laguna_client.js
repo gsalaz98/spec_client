@@ -61,28 +61,28 @@ class LagunaClient {
     if (!decodedMessage) {
       return;
     }
-		if (decodedMessage.a && decodedMessage.a.a) {
-			switch(decodedMessage.a.a) {
-				case 1:
-					this.sharedSecret = ecdh.computeSecret(decodedMessage.a.b);
+    if (decodedMessage.a && decodedMessage.a.a) {
+      switch(decodedMessage.a.a) {
+        case 1:
+          this.sharedSecret = ecdh.computeSecret(decodedMessage.a.b);
           this.txCryption = new Cryption(this.sharedSecret, this.txNonce, this.txSalt);
-					break;
-				case 2:
-					this.sendAppVerification(decodedMessage.a.b);
-					break;
-				case 3:
-					this.checkEyewearVerification(decodedMessage.a.b);
-					break;
-				case 8:
-					this.rxNonce = decodedMessage.a.b;
-					break;
-				case 9:
-					this.rxSalt = decodedMessage.a.b;
+          break;
+        case 2:
+          this.sendAppVerification(decodedMessage.a.b);
+          break;
+        case 3:
+          this.checkEyewearVerification(decodedMessage.a.b);
+          break;
+        case 8:
+          this.rxNonce = decodedMessage.a.b;
+          break;
+        case 9:
+          this.rxSalt = decodedMessage.a.b;
           this.rxCryption = new Cryption(this.sharedSecret, this.rxNonce, this.rxSalt);
-					this.sendTens();
-					break;
-			}
-		}
+          this.sendTens();
+          break;
+      }
+    }
   }
 
   sendTens() {
