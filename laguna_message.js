@@ -1,46 +1,43 @@
-const crypto = require('crypto');
-const debug = require('debug')('LagunaMessage');
-
-const protobuf = require("protobufjs");
-const root = protobuf.loadSync('laguna.proto');
-const Envelope = root.lookupType("laguna.Envelope");
-const algorithm = 'aes128';
+const debug = require('debug')('LagunaMessage')
+const protobuf = require('protobufjs')
+const root = protobuf.loadSync('laguna.proto')
+const Envelope = root.lookupType('laguna.Envelope')
 
 class LagunaMessage {
-  constructor(data) {
+  constructor (data) {
     // 0 = Plain, 0x10 = encrypted, 0x20 = encryption setup
-    this.type = data[0];
-    this.totalLength = data[3];
-    this.content = data.slice(4);
-    debug('LagunaMessage', data);
+    this.type = data[0]
+    this.totalLength = data[3]
+    this.content = data.slice(4)
+    debug('LagunaMessage', data)
   }
 
-  encrypted() {
-    return (this.type === 0x10);
+  encrypted () {
+    return (this.type === 0x10)
   }
 
-  decode() {
+  decode () {
     try {
-      var decodedMessage = Envelope.decode(this.content);
-      debug('decodedMessage', decodedMessage);
-      return decodedMessage;
+      var decodedMessage = Envelope.decode(this.content)
+      debug('decodedMessage', decodedMessage)
+      return decodedMessage
     } catch (e) {
-      debug('Exception during decode', e);
+      debug('Exception during decode', e)
     }
   }
 
-  raw() {
+  raw () {
     const header = Buffer.from([this.type, 0x00, 0x00, this.totalLength])
     return Buffer.concat([header, this.content])
   }
 
-  static fromObject(obj) {
-    const message = Envelope.create(obj);
-    const content = Envelope.encode(message).finish();
-    debug('fromObject', message);
-    const header = Buffer.from([0x20, 0x00, 0x00, content.length]);
-    return new LagunaMessage(Buffer.concat([header, content]));
+  static fromObject (obj) {
+    const message = Envelope.create(obj)
+    const content = Envelope.encode(message).finish()
+    debug('fromObject', message)
+    const header = Buffer.from([0x20, 0x00, 0x00, content.length])
+    return new LagunaMessage(Buffer.concat([header, content]))
   }
 }
 
-module.exports = LagunaMessage;
+module.exports = LagunaMessage
