@@ -22,7 +22,7 @@ class LagunaMessage {
       debug('decodedMessage', decodedMessage)
       return decodedMessage
     } catch (e) {
-      debug('Exception during decode', e)
+      debug('During decode', e, this.content.toString('hex'))
     }
   }
 
