@@ -4,15 +4,19 @@ package laguna;
 
 message Envelope { // lmi / lmh
   EncryptionSetup encryptionSetup = 1;
-  int32 b = 2;
+  int32 value2 = 2;
   string error = 3;
   int32 battery = 4;
 
   //lnk
-  int32 e = 11;
+  int32 value11 = 11;
   repeated C c = 10;
   string version = 16;
-  bytes f = 17;
+  bytes bytes17 = 17;
+
+
+  int32 value19 = 19;
+  int32 value31 = 31;
 }
 
 message EncryptionSetup { //lmg
@@ -21,6 +25,6 @@ message EncryptionSetup { //lmg
 }
 
 message C {
-  int32 a = 1;
+  int32 value1 = 1;
 }
 
