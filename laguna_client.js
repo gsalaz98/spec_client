@@ -7,7 +7,8 @@ const db = low('db.json')
 const ecdh = crypto.createECDH('prime256v1')
 
 db.defaults({
-  app_uuid: Buffer.from('cd5e310a0d2e47dba288327c778870ad', 'hex')
+  // app_uuid: Buffer.from('cd5e310a0d2e47dba288327c778870ad', 'hex')
+  app_uuid: crypto.randomBytes(16)
 }).write()
 
 class LagunaClient {
