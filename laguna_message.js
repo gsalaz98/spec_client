@@ -19,10 +19,10 @@ class LagunaMessage {
   decode () {
     try {
       var decodedMessage = Envelope.decode(this.content)
-      debug('decodedMessage', decodedMessage)
+      debug('decoded', this.content, 'into', decodedMessage)
       return decodedMessage
     } catch (e) {
-      debug('During decode', e, this.content.toString('hex'))
+      debug('Decode error', this.content.toString('hex'), e)
     }
   }
 
@@ -33,9 +33,9 @@ class LagunaMessage {
 
   static fromObject (obj) {
     const message = Envelope.create(obj)
-    const content = Envelope.encode(message).finish()
+    const content = Envelope.encodeDelimited(message).finish()
     debug('fromObject', message)
-    const header = Buffer.from([0x20, 0x00, 0x00, content.length])
+    const header = Buffer.from([0x20, 0x00, 0x00])
     return new LagunaMessage(Buffer.concat([header, content]))
   }
 }
