@@ -22,7 +22,8 @@ class LagunaMessage {
       debug('decoded', this.content, 'into', decodedMessage)
       return decodedMessage
     } catch (e) {
-      debug('Decode error', this.content.toString('hex'), e)
+      debug('Decode error', this.content.toString('hex'))
+      debug(e)
     }
   }
 
