@@ -80,7 +80,6 @@ class LagunaClient {
       switch (stage) {
         case 1:
           this.sharedSecret = ecdh.computeSecret(content)
-          db.set('sharedSecret', this.sharedSecret).write()
           this.txCryption = new Cryption(this.sharedSecret, this.txNonce, this.txSalt)
           break
         case 2:
@@ -91,11 +90,9 @@ class LagunaClient {
           break
         case 8:
           this.rxNonce = content
-          db.set('rxNonce', this.rxNonce).write()
           break
         case 9:
           this.rxSalt = content
-          db.set('rxSalt', this.rxSalt).write()
           this.rxCryption = new Cryption(this.sharedSecret, this.rxNonce, this.rxSalt)
           // this.saveEncryption();
           this.sendTens()
