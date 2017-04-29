@@ -96,7 +96,7 @@ class LagunaClient {
           this.rxSalt = content
           this.rxCryption = new Cryption(this.sharedSecret, this.rxNonce, this.rxSalt)
           // this.saveEncryption();
-          this.sendTens()
+          this.encryptionComplete()
           break
       }
     }
@@ -112,16 +112,16 @@ class LagunaClient {
     db.write()
   }
 
-  sendTens () {
-    var tens = {
+  encryptionComplete () {
+    var message = {
       c: [
-        { a: 7 },
-        { a: 6 },
-        { a: 1 }
+        { value1: 7 },
+        { value1: 6 },
+        { value1: 1 }
       ]
     }
 
-    this.encodeAndSend([tens], true)
+    this.encodeAndSend([message], true)
   }
 
   sendAppVerification (message) {
