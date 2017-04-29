@@ -9,8 +9,9 @@ message Envelope { // lmi / lmh
   int32 battery = 4;
 
   //lnk
-  int32 value11 = 11;
   repeated C c = 10;
+  int32 value11 = 11;
+  int32 value14 = 14;
   string version = 16;
   bytes bytes17 = 17;
 
