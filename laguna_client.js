@@ -2,9 +2,9 @@ var protobuf = require("protobufjs");
 var debug = require('debug')('LagunaClient');
 const crypto = require('crypto');
 const low = require('lowdb');
-const db = low('db.json');
 const LagunaMessage = require('./laguna_message');
 const Cryption = require('./cryption');
+const db = low('db.json');
 const ecdh = crypto.createECDH('prime256v1');
 
 db.defaults({
@@ -18,10 +18,21 @@ class LagunaClient {
     this.public_key = ecdh.generateKeys();
 
     this.app_uuid = Buffer.from(db.get('app_uuid').value());
-    this.app_nonce = crypto.randomBytes(16);
+    if (db.has('sharedSecret')) {
+      this.sharedSecret = Buffer.from(db.get('sharedSecret').value());
+      this.app_nonce = Buffer.from(db.get('app_nonce').value());
+      this.rxNonce = Buffer.from(db.get('rxNonce').value());
+      this.txNonce = Buffer.from(db.get('txNonce').value());
+      this.rxSalt = Buffer.from(db.get('rxSalt').value());
+      this.txSalt = Buffer.from(db.get('txSalt').value());
 
-    this.txNonce = crypto.randomBytes(16);
-    this.txSalt = crypto.randomBytes(32);
+      this.rxCryption = new Cryption(this.sharedSecret, this.rxNonce, this.rxSalt);
+      this.txCryption = new Cryption(this.sharedSecret, this.txNonce, this.txSalt);
+    } else {
+      this.app_nonce = crypto.randomBytes(16);
+      this.txNonce = crypto.randomBytes(16);
+      this.txSalt = crypto.randomBytes(32);
+    }
 
     this.incompleteMessage = Buffer.alloc(0)
     this.bytesRemaining = 0;
@@ -89,10 +100,21 @@ class LagunaClient {
           this.rxSalt = content;
           db.set('rxSalt', this.rxSalt).write();
           this.rxCryption = new Cryption(this.sharedSecret, this.rxNonce, this.rxSalt);
+          // this.saveEncryption();
           this.sendTens();
           break;
       }
     }
+  }
+
+  saveEncryption() {
+    db.set('sharedSecret', this.sharedSecret);
+    db.set('app_nonce', this.app_nonce);
+    db.set('txSalt', this.txSalt);
+    db.set('rxSalt', this.rxSalt);
+    db.set('txNonce', this.rxNonce);
+    db.set('rxNonce', this.rxNonce);
+    db.write();
   }
 
   sendTens() {
