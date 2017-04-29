@@ -16,7 +16,7 @@ class LagunaClient {
     this.public_key = ecdh.generateKeys()
 
     this.app_uuid = Buffer.from(db.get('app_uuid').value())
-    if (db.has('sharedSecret')) {
+    if (db.has('sharedSecret').value()) {
       this.sharedSecret = Buffer.from(db.get('sharedSecret').value())
       this.app_nonce = Buffer.from(db.get('app_nonce').value())
       this.rxNonce = Buffer.from(db.get('rxNonce').value())

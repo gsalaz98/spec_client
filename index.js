@@ -10,7 +10,7 @@ const modes = {
   idle: Buffer.from('c2034b50c80087', 'hex'),
   pair: Buffer.from('c203303430', 'hex')
 }
-const mode = db.has('sharedSecret') ? 'idle' : 'pair'
+const mode = db.has('sharedSecret').value() ? 'idle' : 'pair'
 
 noble.on('stateChange', function (state) {
   if (state === 'poweredOn') {
