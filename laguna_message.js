@@ -34,9 +34,9 @@ class LagunaMessage {
 
   static fromObject (obj) {
     const message = Envelope.create(obj)
-    const content = Envelope.encodeDelimited(message).finish()
+    const content = Envelope.encode(message).finish()
     debug('fromObject', message)
-    const header = Buffer.from([0x20, 0x00, 0x00])
+    const header = Buffer.from([0x20, 0x00, 0x00, content.length])
     return new LagunaMessage(Buffer.concat([header, content]))
   }
 }
