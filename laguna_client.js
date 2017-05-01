@@ -76,24 +76,24 @@ class LagunaClient {
     if (!decodedMessage) {
       return
     }
-    if (decodedMessage.encryptionSetup && decodedMessage.encryptionSetup.stage) {
-      const { stage, content } = decodedMessage.encryptionSetup
-      switch (stage) {
+    if (decodedMessage.a && decodedMessage.a.b) {
+      const { b, c } = decodedMessage.a
+      switch (b) {
         case 1:
-          this.sharedSecret = ecdh.computeSecret(content)
+          this.sharedSecret = ecdh.computeSecret(c)
           this.txCryption = new Cryption(this.sharedSecret, this.txNonce, this.txSalt)
           break
         case 2:
-          this.sendAppVerification(content)
+          this.sendAppVerification(c)
           break
         case 3:
-          this.checkEyewearVerification(content)
+          this.checkEyewearVerification(c)
           break
         case 8:
-          this.rxNonce = content
+          this.rxNonce = c
           break
         case 9:
-          this.rxSalt = content
+          this.rxSalt = c
           this.rxCryption = new Cryption(this.sharedSecret, this.rxNonce, this.rxSalt)
           // this.saveEncryption();
           this.encryptionComplete()
@@ -114,10 +114,10 @@ class LagunaClient {
 
   encryptionComplete () {
     var message = {
-      c: [
-        { value1: 7 },
-        { value1: 6 },
-        { value1: 1 }
+      e: [
+        { a: 7 },
+        { a: 6 },
+        { a: 1 }
       ]
     }
 
@@ -133,9 +133,9 @@ class LagunaClient {
     reply.write(mac.toString('hex'), 0x38, 0x20, 'hex')
 
     var stageThree = {
-      encryptionSetup: {
-        stage: 3,
-        content: reply
+      a: {
+        b: 3,
+        c: reply
       }
     }
 
@@ -144,9 +144,9 @@ class LagunaClient {
 
   sendPublicKey () {
     const publicKeyMessage = {
-      encryptionSetup: {
-        stage: 1,
-        content: this.public_key
+      a: {
+        b: 1,
+        c: this.public_key
       }
     }
     this.encodeAndSend([publicKeyMessage])
@@ -166,16 +166,16 @@ class LagunaClient {
 
   sendTxSaltAndNonce () {
     const txNonce = {
-      encryptionSetup: {
-        stage: 8,
-        content: this.txNonce
+      a: {
+        b: 8,
+        c: this.txNonce
       }
     }
 
     const txSalt = {
-      encryptionSetup: {
-        stage: 9,
-        content: this.txSalt
+      a: {
+        b: 9,
+        c: this.txSalt
       }
     }
 
@@ -184,7 +184,7 @@ class LagunaClient {
 
   encodeAndSend (objs, encrypt) {
     var all = objs.reduce((acc, obj) => {
-      let newMessage = LagunaMessage.fromObject(obj)
+      let newMessage = LagunaMessage.fromObject(obj, encrypt ? 0x00 : 0x20)
       if (encrypt) {
         newMessage = this.txCryption.encrypt(newMessage)
       }
