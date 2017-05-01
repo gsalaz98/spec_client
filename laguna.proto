@@ -302,7 +302,7 @@ message Lnl {
 }
 
 message Lnm {
-  repeated int32 a = 1;
+  int32 a = 1;
 }
 
 message Lnn {

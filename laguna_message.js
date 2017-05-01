@@ -32,7 +32,8 @@ class LagunaMessage {
           decodedMessage = Lmi.decode(this.content)
           break
       }
-      debug('decoded', this.content, 'into', decodedMessage)
+      debug('decoded', this.content)
+      debug('into', decodedMessage)
       return decodedMessage
     } catch (e) {
       debug('Decode error', this.content.toString('hex'))
