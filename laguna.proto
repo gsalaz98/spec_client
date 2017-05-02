@@ -285,7 +285,7 @@ message Lnk {
   bool x = 30;
   bool o = 31;
   Lmb y = 32;
-  bytes z = 33;
+  string z = 33; //originally a buffer
   bytes A = 34;
   int32 B = 35;
   string C = 36;
