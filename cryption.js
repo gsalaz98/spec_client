@@ -1,7 +1,7 @@
 const crypto = require('crypto')
 const debug = require('debug')('Cryption')
 const blockSize = 0x10
-const algorithm = 'aes128'
+const algorithm = 'aes128' //almost certain its aes-128-gcm
 
 class Cryption {
   constructor (sharedSecret, nonce, salt) {
@@ -46,7 +46,7 @@ class Cryption {
     const calculateMac = this.sign(this.hmacKey, content).slice(0, blockSize)
 
     if (mac.toString('hex') === calculateMac.toString('hex')) {
-      debug('Valid mac')
+      // debug('Valid mac')
     } else {
       debug('Invalid mac: ', mac, '!=', calculateMac)
       return lagunaMessage

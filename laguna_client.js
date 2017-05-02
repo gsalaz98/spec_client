@@ -47,7 +47,7 @@ class LagunaClient {
         end = Math.min(cursor + MAX_CHARACTERISTIC_SIZE, message.length)
         chunk = message.slice(cursor, end)
         cursor = end
-        debug('send chunk', chunk.toString('hex'))
+        // debug('send chunk', chunk.toString('hex'))
         this.writeCharacteristic.write(chunk, false, sendChunk)
       }
     }
@@ -55,7 +55,7 @@ class LagunaClient {
   }
 
   readChunk (chunk) {
-    debug('read chunk', chunk.toString('hex'))
+    // debug('read chunk', chunk.toString('hex'))
     this.incompleteMessage = Buffer.concat([this.incompleteMessage, chunk])
 
     if (this.incompleteMessage.length > 2) {

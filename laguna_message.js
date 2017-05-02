@@ -12,7 +12,7 @@ class LagunaMessage {
     this.type = data[0]
     this.totalLength = data[3]
     this.content = data.slice(4)
-    debug('LagunaMessage', data)
+    // debug('LagunaMessage', data)
   }
 
   encrypted () {
@@ -32,8 +32,8 @@ class LagunaMessage {
           decodedMessage = Lmi.decode(this.content)
           break
       }
-      debug('decoded', this.content)
-      debug('into', decodedMessage)
+      // debug('decoded', this.content)
+      debug(decodedMessage)
       return decodedMessage
     } catch (e) {
       debug('Decode error', this.content.toString('hex'))
@@ -62,7 +62,7 @@ class LagunaMessage {
         content = Lmh.encode(message).finish()
         break
     }
-    debug('fromObject', message)
+    // debug('fromObject', message)
     const header = Buffer.from([type, 0x00, 0x00, content.length])
     return new LagunaMessage(Buffer.concat([header, content]))
   }
