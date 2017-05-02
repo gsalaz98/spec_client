@@ -263,18 +263,18 @@ message Lnj {
 }
 
 message Lnk {
-  int32 h = 3; //mediaCount
-  int32 i = 4; //battery
+  int32 mediaCount = 3; //mediaCount
+  unt32 battery = 4; //battery
   string j = 10;
   int32 a = 11;
   int32 k = 12; // deviceColor? device color enum: NONE(1), BLACK(2), CLEAR(3), CORAL(4), TEAL(5),
   DebugReport b = 13; //DebugReport? lnd
   bool r = 14;
-  string l = 16; //when I receive, looks like firmware version string
-  string m = 17; //serialNumber
+  string firmwareVersion = 16;
+  string serialNumber = 17;
   int32 q = 18;
   int32 n = 19;
-  Lng d = 20; //lng
+  Lng d = 20;
   bool t = 21; //isAmbaCrashed
   int32 s = 22; //storagePercent
   int32 v = 23;
@@ -282,7 +282,7 @@ message Lnk {
   Lnn c = 26;
   bool u = 27;
   bool w = 28;
-  bool x = 30;
+  bool x = 30; //Button pushed
   bool o = 31;
   Lmb y = 32;
   string z = 33; //originally a buffer
