@@ -9,9 +9,14 @@ class Cryption {
     this.nonce = nonce
     this.salt = salt
     this.hmacKey = this.sign(this.sharedSecret, this.salt)
-    this.key = this._encrypt(this.sharedSecret, this.nonce)
-    this.counter = 0
+    this.resetKey()
     // debug('Cryption', {sharedSecret, nonce, salt});
+  }
+
+  resetKey () {
+    this.rollingNonce = this.nonce
+    this.key = this._encrypt(this.sharedSecret, this.rollingNonce)
+    this.counter = 0
   }
 
   encrypt (lagunaMessage) {
@@ -60,23 +65,26 @@ class Cryption {
     const result = Buffer.alloc(data.length)
 
     for (var i = 0; i < data.length; i++) {
-      result[i] = data[i] ^ this.key[i]
-      this.counter++
-      if (this.counter > 15) {
-        this.bumpKey()
+      result[i] = data[i] ^ this.key[this.counter]
+
+      if (this.counter === 15) {
+        this.incrementKey()
+        this.counter = 0
+      } else {
+        this.counter++
       }
     }
 
-    // debug('xor', result);
     return result
   }
 
-  bumpKey () {
-    for (var i = 0; i < blockSize; i++) {
-      this.nonce[i]++
+  incrementKey () {
+    for (var i = 0; i < this.rollingNonce.length; i++) {
+      if (this.rollingNonce[i]++ !== 0xFF) {
+        break
+      }
     }
-    this.key = this._encrypt(this.sharedSecret, this.nonce)
-    this.counter = 0
+    this.key = this._encrypt(this.sharedSecret, this.rollingNonce)
   }
 
   sign (key, data) {
@@ -87,8 +95,11 @@ class Cryption {
 
   _encrypt (key, data) {
     const iv = Buffer.alloc(blockSize)
-    const decipher = crypto.createCipheriv(algorithm, key, iv)
-    return Buffer.concat([decipher.update(data), decipher.final()])
+    const cipher = crypto.createCipheriv(algorithm, key, iv)
+    cipher.setAutoPadding(false)
+    const up = cipher.update(data)
+    const final = cipher.final()
+    return Buffer.concat([up, final])
   }
 }
 
