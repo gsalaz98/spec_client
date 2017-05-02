@@ -62,7 +62,7 @@ class LagunaMessage {
         content = Lmh.encode(message).finish()
         break
     }
-    // debug('fromObject', message)
+    debug(message)
     const header = Buffer.from([type, 0x00, 0x00, content.length])
     return new LagunaMessage(Buffer.concat([header, content]))
   }
