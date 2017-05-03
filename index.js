@@ -63,7 +63,7 @@ function handleCharacteristics (error, characteristics) {
           lagunaClient.sendPublicKey()
           break
         case 'idle':
-          lagunaClient.sendTens()
+          lagunaClient.requestDeviceInfo()
           break
       }
     } else if (characteristic.properties.includes('indicate')) {

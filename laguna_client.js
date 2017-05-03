@@ -99,24 +99,26 @@ class LagunaClient {
       case 9:
         this.rxSalt = c
         this.rxCryption = new Cryption(this.sharedSecret, this.rxNonce, this.rxSalt)
-        // this.saveEncryption();
-        this.encryptionComplete()
+        this.encryptionSetupComplete()
         break
     }
   }
 
   saveEncryption () {
-    db.set('sharedSecret', this.sharedSecret)
-    db.set('app_nonce', this.app_nonce)
-    db.set('txSalt', this.txSalt)
-    db.set('rxSalt', this.rxSalt)
-    db.set('txNonce', this.rxNonce)
-    db.set('rxNonce', this.rxNonce)
-    db.write()
+    db.set('app_nonce', this.app_nonce).write()
+    db.set('txSalt', this.txSalt).write()
+    db.set('rxSalt', this.rxSalt).write()
+    db.set('txNonce', this.rxNonce).write()
+    db.set('rxNonce', this.rxNonce).write()
+    db.set('sharedSecret', this.sharedSecret).write()
   }
 
-  encryptionComplete () {
+  encryptionSetupComplete () {
+    debug('EncryptionSetup complete')
     this.authenticated = true
+  }
+
+  requestDeviceInfo () {
     var message = {
       e: [
         { a: 7 },
