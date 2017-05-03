@@ -12,8 +12,8 @@ message DebugReport {
 message DebugReportA {
   uint32 e = 1;
   int32 a = 2;
-  DebugMessageAB b = 3;
-  DebugMessageAA c = 4;
+  DebugReportAB b = 3;
+  DebugReportAA c = 4;
 }
 
 message DebugReportB {
@@ -264,7 +264,7 @@ message Lnj {
 
 message Lnk {
   int32 mediaCount = 3; //mediaCount
-  unt32 battery = 4; //battery
+  uint32 battery = 4; //battery
   string j = 10;
   int32 a = 11;
   int32 k = 12; // deviceColor? device color enum: NONE(1), BLACK(2), CLEAR(3), CORAL(4), TEAL(5),
@@ -555,7 +555,7 @@ message Sbl {
   San c = 8;
   Saz e = 9;
   repeated string str = 10;
-  in32 g = 11;
+  int32 g = 11;
   string f = 14;
   string p = 15;
   Sbq h = 16;
