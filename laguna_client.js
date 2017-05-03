@@ -27,12 +27,12 @@ class LagunaClient {
 
       this.rxCryption = new Cryption(this.sharedSecret, this.rxNonce, this.rxSalt)
       this.txCryption = new Cryption(this.sharedSecret, this.txNonce, this.txSalt)
-      this.authenticated = true
+      this.state = 'SETDEVICENAME'
     } else {
       this.app_nonce = crypto.randomBytes(16)
       this.txNonce = crypto.randomBytes(16)
       this.txSalt = crypto.randomBytes(32)
-      this.authenticated = false
+      this.state = 'ENCRYPTIONSETUP'
     }
 
     this.incompleteMessage = Buffer.alloc(0)
@@ -75,8 +75,19 @@ class LagunaClient {
   }
 
   completeMessage (decodedMessage) {
-    if (!this.authenticated) {
-      this.encryptionSetup(decodedMessage)
+    switch (this.state) {
+      case 'ENCRYPTIONSETUP':
+        this.encryptionSetup(decodedMessage)
+        break
+      case 'SETDEVICENAME':
+        this.setUserId('bettse')
+        break
+      case 'SETUSERID':
+        break
+    }
+
+    if (decodedMessage.status === 4) {
+      process.stdout.write(decodedMessage.z)
     }
   }
 
@@ -115,7 +126,25 @@ class LagunaClient {
 
   encryptionSetupComplete () {
     debug('EncryptionSetup complete')
-    this.authenticated = true
+    this.setDeviceName('SPECS')
+  }
+
+  setUserId (userId) {
+    this.state = 'SETUSERID'
+    var message = {
+      f: { a: [ userId ] }
+    }
+
+    this.encodeAndSend([message], true)
+  }
+
+  setDeviceName (newName) {
+    this.state = 'SETDEVICENAME'
+    var message = {
+      g: { a: [ '💩' + newName ] }
+    }
+
+    this.encodeAndSend([message], true)
   }
 
   requestDeviceInfo () {
