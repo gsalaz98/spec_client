@@ -54,10 +54,10 @@ message Lmb {
 }
 
 message Lmc { //Request
-  Lme a = 3;
-  Lmu b = 4;
+  Lme a = 3; //something about eyewear authentication
+  Lmu b = 4; //something about video files
   Lmj c = 5;
-  Lmp d = 6;
+  Lmp d = 6; //something about log files
 }
 
 message Lmd { //Response
@@ -70,13 +70,13 @@ message Lmd { //Response
 
 message Lme {
   int32 a = 1;
-  bytes c = 2;
+  bytes c = 2; //generateMFIChallenge
   bytes d = 3;
 }
 
 message Lmf {
   Lme b = 1;
-  bytes c = 2;
+  bytes c = 2; //appAuthResponseFromChallenge
 }
 
 message Lmg { //EncryptionSetup?
@@ -124,7 +124,7 @@ message Lmm {
 }
 
 message Lmn {
-  string c = 1;
+  string c = 1; // log file...contents?
   string d = 2;
 }
 
