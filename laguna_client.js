@@ -27,10 +27,12 @@ class LagunaClient {
 
       this.rxCryption = new Cryption(this.sharedSecret, this.rxNonce, this.rxSalt)
       this.txCryption = new Cryption(this.sharedSecret, this.txNonce, this.txSalt)
+      this.authenticated = true
     } else {
       this.app_nonce = crypto.randomBytes(16)
       this.txNonce = crypto.randomBytes(16)
       this.txSalt = crypto.randomBytes(32)
+      this.authenticated = false
     }
 
     this.incompleteMessage = Buffer.alloc(0)
@@ -73,32 +75,33 @@ class LagunaClient {
   }
 
   completeMessage (decodedMessage) {
-    if (!decodedMessage) {
-      return
+    if (!this.authenticated) {
+      this.encryptionSetup(decodedMessage)
     }
-    if (decodedMessage.a && decodedMessage.a.b) {
-      const { b, c } = decodedMessage.a
-      switch (b) {
-        case 1:
-          this.sharedSecret = ecdh.computeSecret(c)
-          this.txCryption = new Cryption(this.sharedSecret, this.txNonce, this.txSalt)
-          break
-        case 2:
-          this.sendAppVerification(c)
-          break
-        case 3:
-          this.checkEyewearVerification(c)
-          break
-        case 8:
-          this.rxNonce = c
-          break
-        case 9:
-          this.rxSalt = c
-          this.rxCryption = new Cryption(this.sharedSecret, this.rxNonce, this.rxSalt)
-          // this.saveEncryption();
-          this.encryptionComplete()
-          break
-      }
+  }
+
+  encryptionSetup (decodedMessage) {
+    const { b, c } = decodedMessage.a
+    switch (b) {
+      case 1:
+        this.sharedSecret = ecdh.computeSecret(c)
+        this.txCryption = new Cryption(this.sharedSecret, this.txNonce, this.txSalt)
+        break
+      case 2:
+        this.sendAppVerification(c)
+        break
+      case 3:
+        this.checkEyewearVerification(c)
+        break
+      case 8:
+        this.rxNonce = c
+        break
+      case 9:
+        this.rxSalt = c
+        this.rxCryption = new Cryption(this.sharedSecret, this.rxNonce, this.rxSalt)
+        // this.saveEncryption();
+        this.encryptionComplete()
+        break
     }
   }
 
@@ -113,6 +116,7 @@ class LagunaClient {
   }
 
   encryptionComplete () {
+    this.authenticated = true
     var message = {
       e: [
         { a: 7 },
