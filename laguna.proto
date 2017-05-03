@@ -255,7 +255,7 @@ message Lnj {
   Lnp f = 9;
   repeated Lnm e = 10;
   Lne g = 11;
-  Lnf h = 12;
+  Lnf h = 12; //something about firmware?
   Lmz l = 13;
   bool m = 14;
   Lmx n = 15;
@@ -266,7 +266,7 @@ message Lnk {
   int32 mediaCount = 3; //mediaCount
   uint32 battery = 4; //battery
   string j = 10;
-  int32 a = 11;
+  int32 status = 11;
   int32 k = 12; // deviceColor? device color enum: NONE(1), BLACK(2), CLEAR(3), CORAL(4), TEAL(5),
   DebugReport b = 13; //DebugReport? lnd
   bool r = 14;
@@ -286,15 +286,15 @@ message Lnk {
   bool o = 31;
   Lmb y = 32;
   string z = 33; //originally a buffer
-  bytes A = 34;
-  int32 B = 35;
-  string C = 36;
-  Lmy D = 37;
+  bytes A2 = 34;
+  int32 B2 = 35;
+  string C2 = 36;
+  Lmy D2 = 37;
   Lna e = 38;
   Lnb f = 39;
-  Lnh E = 40;
-  string F = 41;
-  int32 G = 42;
+  Lnh E2 = 40;
+  string F2 = 41;
+  int32 G2 = 42;
 }
 
 message Lnl {
