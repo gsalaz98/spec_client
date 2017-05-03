@@ -1,7 +1,7 @@
 const crypto = require('crypto')
 const debug = require('debug')('Cryption')
 const blockSize = 0x10
-const algorithm = 'aes128' //almost certain its aes-128-gcm
+const algorithm = 'aes128' // It would be aes-128-ctr if the incrementation was big endian
 
 class Cryption {
   constructor (sharedSecret, nonce, salt) {
