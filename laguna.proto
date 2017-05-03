@@ -189,7 +189,7 @@ message Lmy {
 }
 
 message Lmz {
-  int32 b = 1;
+  int32 b = 1; //1 = UpdateSetRequest, 2=UpdateGetRequest, 3=UpdateCancelRequest
   string c = 2;
   string d = 3;
   uint32 e = 4;
@@ -219,7 +219,7 @@ message Lnc {
 }
 
 message Lne {
-  repeated string a = 1;
+  repeated string a = 1; //Device name
 }
 
 message Lnf {
@@ -252,9 +252,9 @@ message Lnj {
   Lnq c = 5;
   Lmw d = 7;
   Lni k = 8;
-  Lnp f = 9;
+  Lnp f = 9; //user name?
   repeated Lnm e = 10;
-  Lne g = 11;
+  Lne g = 11; //Device name
   Lnf h = 12; //something about firmware?
   Lmz l = 13;
   bool m = 14;
@@ -317,7 +317,7 @@ message Lno {
 }
 
 message Lnp {
-  repeated string a = 1;
+  repeated string a = 1; //LAGUNA_USER_ID ?
 }
 message Lnq {
   repeated int32 a = 1;
@@ -331,6 +331,7 @@ message Lnr {
   repeated int32 b = 2;
 }
 
+// Video metadata response?
 message Lns {
   Lmk s = 1;
   int32 b = 2;
