@@ -1,5 +1,7 @@
 var debug = require('debug')('Client')
 const crypto = require('crypto')
+const protobuf = require('protobufjs')
+const root = protobuf.loadSync('laguna.proto')
 const low = require('lowdb')
 const Message = require('./message')
 const Cryption = require('./cryption')
@@ -65,7 +67,7 @@ class Client {
       lengthBytes[0] = lengthBytes[0] & 0x0f
       const length = lengthBytes.readUInt32BE(0, 4)
       if (this.incompleteMessage.length >= length + 4) {
-        var m = new Message(this.incompleteMessage.slice(0, length + 4))
+        var m = Message .fromBuffer(this.incompleteMessage.slice(0, length + 4))
         if (m.encrypted()) {
           m = this.rxCryption.decrypt(m)
         }
@@ -180,13 +182,16 @@ class Client {
   }
 
   sendPublicKey () {
-    const publicKeyMessage = {
+    const Lmh = root.lookupType('laguna.Lmh')
+    const o = Lmh.create({
       a: {
         b: 1,
         c: this.public_key
       }
-    }
-    this.encodeAndSend([publicKeyMessage])
+    })
+    const content = Lmh.encode(o).finish()
+    const message = new Message(Message.SETUP, content)
+    this.sendMessage(message.raw())
   }
 
   checkEyewearVerification (message) {

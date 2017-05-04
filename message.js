@@ -9,13 +9,22 @@ const NIBBLE_SIZE = 4
 const HI_NIBBLE_MASK = 0x0f
 
 class Message {
-  constructor (data) {
-    // 0 = Plain, 1 = encrypted, 2 = encryption setup
-    this.type = data.readUInt8(0) >> NIBBLE_SIZE
+  constructor (type, content) {
+    this.type = type
+    this.content = content
+    this.totalLength = content.length
+  }
+
+  static fromBuffer (data) {
+    const type = data.readUInt8(0) >> NIBBLE_SIZE
     data[0] = data[0] & HI_NIBBLE_MASK // Mask out type field
-    this.totalLength = data.readUInt32BE(0, 4)
-    this.content = data.slice(4)
-    // debug('Message', data)
+    const totalLength = data.readUInt32BE(0, 4)
+    const content = data.slice(4)
+    if (content.length < totalLength) {
+      console.log('Something fishy in fromBuffer')
+      return null
+    }
+    return new Message(type, content)
   }
 
   encrypted () {
@@ -68,11 +77,11 @@ class Message {
         break
     }
     debug(message)
-    const header = Buffer.alloc(4)
-    header.writeUInt32BE(content.length, 0)
-    header[0] = header[0] | type << 4
-    return new Message(Buffer.concat([header, content]))
+    return new Message(type, content)
   }
 }
+Message.PLAIN = 0
+Message.ENCRYPTED = 1
+Message.SETUP = 2
 
 module.exports = Message
