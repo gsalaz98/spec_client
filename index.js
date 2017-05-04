@@ -16,6 +16,7 @@ noble.on('stateChange', function (state) {
   if (state === 'poweredOn') {
     debug(state, 'scanner for', mode, 'mode')
     noble.startScanning()
+    console.log('Hold button for 7 seconds')
   } else {
     noble.stopScanning()
   }
