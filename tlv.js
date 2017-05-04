@@ -1,4 +1,4 @@
-const debug = require('debug')('Message')
+const debug = require('debug')('TLV')
 const protobuf = require('protobufjs')
 const root = protobuf.loadSync('laguna.proto')
 const Lmi = root.lookupType('laguna.Lmi')
@@ -8,7 +8,7 @@ const Lnk = root.lookupType('laguna.Lnk')
 const NIBBLE_SIZE = 4
 const HI_NIBBLE_MASK = 0x0f
 
-class Message {
+class TLV {
   constructor (type, content) {
     this.type = type
     this.content = content
@@ -24,7 +24,7 @@ class Message {
       console.log('Something fishy in fromBuffer')
       return null
     }
-    return new Message(type, content)
+    return new TLV(type, content)
   }
 
   encrypted () {
@@ -77,11 +77,11 @@ class Message {
         break
     }
     debug(message)
-    return new Message(type, content)
+    return new TLV(type, content)
   }
 }
-Message.PLAIN = 0
-Message.ENCRYPTED = 1
-Message.SETUP = 2
+TLV.PLAIN = 0
+TLV.ENCRYPTED = 1
+TLV.SETUP = 2
 
-module.exports = Message
+module.exports = TLV

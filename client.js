@@ -3,7 +3,7 @@ const crypto = require('crypto')
 const protobuf = require('protobufjs')
 const root = protobuf.loadSync('laguna.proto')
 const low = require('lowdb')
-const Message = require('./message')
+const TLV = require('./tlv')
 const Cryption = require('./cryption')
 const db = low('db.json')
 const ecdh = crypto.createECDH('prime256v1')
@@ -66,7 +66,7 @@ class Client {
       lengthBytes[0] = lengthBytes[0] & 0x0f
       const length = lengthBytes.readUInt32BE(0, 4)
       if (this.incompleteMessage.length >= length + 4) {
-        var m = Message.fromBuffer(this.incompleteMessage.slice(0, length + 4))
+        var m = TLV.fromBuffer(this.incompleteMessage.slice(0, length + 4))
         if (m.encrypted()) {
           m = this.rxCryption.decrypt(m)
         }
@@ -220,7 +220,7 @@ class Client {
     var all = objs.reduce((acc, obj) => {
       const o = Lmh.create(obj)
       const content = Lmh.encode(o).finish()
-      const message = new Message(Message.SETUP, content)
+      const message = new TLV(TLV.SETUP, content)
       return Buffer.concat([acc, message.raw()])
     }, Buffer.alloc(0))
 
