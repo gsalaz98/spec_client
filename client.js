@@ -38,7 +38,6 @@ class Client {
     }
 
     this.incompleteMessage = Buffer.alloc(0)
-    this.bytesRemaining = 0
   }
 
   sendMessage (message) {
@@ -67,7 +66,7 @@ class Client {
       lengthBytes[0] = lengthBytes[0] & 0x0f
       const length = lengthBytes.readUInt32BE(0, 4)
       if (this.incompleteMessage.length >= length + 4) {
-        var m = Message .fromBuffer(this.incompleteMessage.slice(0, length + 4))
+        var m = Message.fromBuffer(this.incompleteMessage.slice(0, length + 4))
         if (m.encrypted()) {
           m = this.rxCryption.decrypt(m)
         }
