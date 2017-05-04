@@ -130,7 +130,7 @@ class Client {
 
   encryptionSetupComplete () {
     debug('EncryptionSetup complete')
-    this.setDeviceName('SPECS')
+    // this.setDeviceName('SPECS')
   }
 
   setUserId (userId) {
@@ -138,8 +138,6 @@ class Client {
     var message = {
       f: { a: [ userId ] }
     }
-
-    this.encodeAndSend([message], true)
   }
 
   setDeviceName (newName) {
@@ -147,8 +145,6 @@ class Client {
     var message = {
       g: { a: [ '💩' + newName ] }
     }
-
-    this.encodeAndSend([message], true)
   }
 
   requestDeviceInfo () {
@@ -159,8 +155,6 @@ class Client {
         { a: 1 }
       ]
     }
-
-    this.encodeAndSend([message], true)
   }
 
   sendAppVerification (message) {
@@ -178,20 +172,17 @@ class Client {
       }
     }
 
-    this.encodeAndSend([stageThree])
+    this.encodeAndSendSetup([stageThree])
   }
 
   sendPublicKey () {
-    const Lmh = root.lookupType('laguna.Lmh')
-    const o = Lmh.create({
+    const publicKeyMessage = {
       a: {
         b: 1,
         c: this.public_key
       }
-    })
-    const content = Lmh.encode(o).finish()
-    const message = new Message(Message.SETUP, content)
-    this.sendMessage(message.raw())
+    }
+    this.encodeAndSendSetup([publicKeyMessage])
   }
 
   checkEyewearVerification (message) {
@@ -221,16 +212,17 @@ class Client {
       }
     }
 
-    this.encodeAndSend([txNonce, txSalt])
+    this.encodeAndSendSetup([txNonce, txSalt])
   }
 
-  encodeAndSend (objs, encrypt) {
+  encodeAndSendSetup (objs) {
+    const Lmh = root.lookupType('laguna.Lmh')
+
     var all = objs.reduce((acc, obj) => {
-      let newMessage = Message.fromObject(obj, encrypt ? 0 : 2)
-      if (encrypt) {
-        newMessage = this.txCryption.encrypt(newMessage)
-      }
-      return Buffer.concat([acc, newMessage.raw()])
+      const o = Lmh.create(obj)
+      const content = Lmh.encode(o).finish()
+      const message = new Message(Message.SETUP, content)
+      return Buffer.concat([acc, message.raw()])
     }, Buffer.alloc(0))
 
     this.sendMessage(all)
