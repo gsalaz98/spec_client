@@ -1,7 +1,7 @@
 var debug = require('debug')('LagunaClient')
 const crypto = require('crypto')
 const low = require('lowdb')
-const LagunaMessage = require('./laguna_message')
+const Message = require('./message')
 const Cryption = require('./cryption')
 const db = low('db.json')
 const ecdh = crypto.createECDH('prime256v1')
@@ -63,7 +63,7 @@ class LagunaClient {
     if (this.incompleteMessage.length > 2) {
       const length = this.incompleteMessage[3]
       if (this.incompleteMessage.length >= length + 4) {
-        var m = new LagunaMessage(this.incompleteMessage.slice(0, length + 4))
+        var m = new Message(this.incompleteMessage.slice(0, length + 4))
         if (m.encrypted()) {
           m = this.rxCryption.decrypt(m)
         }
@@ -219,7 +219,7 @@ class LagunaClient {
 
   encodeAndSend (objs, encrypt) {
     var all = objs.reduce((acc, obj) => {
-      let newMessage = LagunaMessage.fromObject(obj, encrypt ? 0 : 2)
+      let newMessage = Message.fromObject(obj, encrypt ? 0 : 2)
       if (encrypt) {
         newMessage = this.txCryption.encrypt(newMessage)
       }

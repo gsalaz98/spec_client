@@ -1,4 +1,4 @@
-const debug = require('debug')('LagunaMessage')
+const debug = require('debug')('Message')
 const protobuf = require('protobufjs')
 const root = protobuf.loadSync('laguna.proto')
 const Lmi = root.lookupType('laguna.Lmi')
@@ -8,14 +8,14 @@ const Lnk = root.lookupType('laguna.Lnk')
 const NIBBLE_SIZE = 4
 const HI_NIBBLE_MASK = 0x0f
 
-class LagunaMessage {
+class Message {
   constructor (data) {
     // 0 = Plain, 1 = encrypted, 2 = encryption setup
     this.type = data.readUInt8(0) >> NIBBLE_SIZE
     data[0] = data[0] & HI_NIBBLE_MASK // Mask out type field
     this.totalLength = data.readUInt32BE(0, 4)
     this.content = data.slice(4)
-    // debug('LagunaMessage', data)
+    // debug('Message', data)
   }
 
   encrypted () {
@@ -71,8 +71,8 @@ class LagunaMessage {
     const header = Buffer.alloc(4)
     header.writeUInt32BE(content.length, 0)
     header[0] = header[0] | type << 4
-    return new LagunaMessage(Buffer.concat([header, content]))
+    return new Message(Buffer.concat([header, content]))
   }
 }
 
-module.exports = LagunaMessage
+module.exports = Message
