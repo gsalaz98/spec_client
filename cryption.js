@@ -20,7 +20,7 @@ class Cryption {
   }
 
   encrypt (lagunaMessage) {
-    if (lagunaMessage.type === 0x10) {
+    if (lagunaMessage.type === 1) {
       debug('Encrypt called on encrypted type')
       return lagunaMessage
     }
@@ -30,13 +30,13 @@ class Cryption {
     // debug('encrypt', result);
 
     lagunaMessage.content = Buffer.concat([result, mac])
-    lagunaMessage.type = 0x10
+    lagunaMessage.type = 1
     lagunaMessage.totalLength = lagunaMessage.content.length
     return lagunaMessage
   }
 
   decrypt (lagunaMessage) {
-    if (lagunaMessage.type !== 0x10) {
+    if (lagunaMessage.type !== 1) {
       debug('Decrypt called on non-encrypted type')
       return lagunaMessage
     }
@@ -56,7 +56,7 @@ class Cryption {
     // debug('decrypt', result);
 
     lagunaMessage.content = result
-    lagunaMessage.type = 0x00
+    lagunaMessage.type = 0
     lagunaMessage.totalLength = lagunaMessage.content.length
     return lagunaMessage
   }

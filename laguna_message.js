@@ -5,30 +5,33 @@ const Lmi = root.lookupType('laguna.Lmi')
 const Lmh = root.lookupType('laguna.Lmh')
 const Lnj = root.lookupType('laguna.Lnj')
 const Lnk = root.lookupType('laguna.Lnk')
+const NIBBLE_SIZE = 4
+const HI_NIBBLE_MASK = 0x0f
 
 class LagunaMessage {
   constructor (data) {
-    // 0 = Plain, 0x10 = encrypted, 0x20 = encryption setup
-    this.type = data[0]
-    this.totalLength = data[3]
+    // 0 = Plain, 1 = encrypted, 2 = encryption setup
+    this.type = data.readUInt8(0) >> NIBBLE_SIZE
+    data[0] = data[0] & HI_NIBBLE_MASK // Mask out type field
+    this.totalLength = data.readUInt32BE(0, 4)
     this.content = data.slice(4)
     // debug('LagunaMessage', data)
   }
 
   encrypted () {
-    return (this.type === 0x10)
+    return (this.type === 1)
   }
 
   decode () {
     try {
       var decodedMessage
       switch (this.type) {
-        case 0x00:
+        case 0:
           decodedMessage = Lnk.decode(this.content)
           break
-        case 0x10:
+        case 1:
           break
-        case 0x20:
+        case 2:
           decodedMessage = Lmi.decode(this.content)
           break
       }
@@ -42,28 +45,32 @@ class LagunaMessage {
   }
 
   raw () {
-    const header = Buffer.from([this.type, 0x00, 0x00, this.totalLength])
+    const header = Buffer.alloc(4)
+    header.writeUInt32BE(this.totalLength, 0)
+    header[0] = header[0] | this.type << 4
     return Buffer.concat([header, this.content])
   }
 
   static fromObject (obj, type) {
-    type = type || 0x00
+    type = type || 0
     var message
     var content
     switch (type) {
-      case 0x00:
+      case 0:
         message = Lnj.create(obj)
         content = Lnj.encode(message).finish()
         break
-      case 0x10:
+      case 1:
         break
-      case 0x20:
+      case 2:
         message = Lmh.create(obj)
         content = Lmh.encode(message).finish()
         break
     }
     debug(message)
-    const header = Buffer.from([type, 0x00, 0x00, content.length])
+    const header = Buffer.alloc(4)
+    header.writeUInt32BE(content.length, 0)
+    header[0] = header[0] | type << 4
     return new LagunaMessage(Buffer.concat([header, content]))
   }
 }

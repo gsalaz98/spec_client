@@ -219,7 +219,7 @@ class LagunaClient {
 
   encodeAndSend (objs, encrypt) {
     var all = objs.reduce((acc, obj) => {
-      let newMessage = LagunaMessage.fromObject(obj, encrypt ? 0x00 : 0x20)
+      let newMessage = LagunaMessage.fromObject(obj, encrypt ? 0 : 2)
       if (encrypt) {
         newMessage = this.txCryption.encrypt(newMessage)
       }
