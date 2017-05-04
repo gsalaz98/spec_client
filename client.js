@@ -60,8 +60,10 @@ class Client {
     // debug('read chunk', chunk.toString('hex'))
     this.incompleteMessage = Buffer.concat([this.incompleteMessage, chunk])
 
-    if (this.incompleteMessage.length > 2) {
-      const length = this.incompleteMessage[3]
+    if (this.incompleteMessage.length >= 4) {
+      const lengthBytes = Buffer.from(this.incompleteMessage.slice(0, 4)) // Copy buffer so we can mask type nibble
+      lengthBytes[0] = lengthBytes[0] & 0x0f
+      const length = lengthBytes.readUInt32BE(0, 4)
       if (this.incompleteMessage.length >= length + 4) {
         var m = new Message(this.incompleteMessage.slice(0, length + 4))
         if (m.encrypted()) {
@@ -80,7 +82,7 @@ class Client {
         this.encryptionSetup(decodedMessage)
         break
       case 'SETDEVICENAME':
-        this.setUserId('bettse')
+        // this.setUserId('bettse')
         break
       case 'SETUSERID':
         break
