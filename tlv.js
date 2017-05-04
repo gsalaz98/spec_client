@@ -1,10 +1,4 @@
 const debug = require('debug')('TLV')
-const protobuf = require('protobufjs')
-const root = protobuf.loadSync('laguna.proto')
-const Lmi = root.lookupType('laguna.Lmi')
-const Lmh = root.lookupType('laguna.Lmh')
-const Lnj = root.lookupType('laguna.Lnj')
-const Lnk = root.lookupType('laguna.Lnk')
 const NIBBLE_SIZE = 4
 const HI_NIBBLE_MASK = 0x0f
 
@@ -31,26 +25,10 @@ class TLV {
     return (this.type === 1)
   }
 
-  decode () {
-    try {
-      var decodedMessage
-      switch (this.type) {
-        case 0:
-          decodedMessage = Lnk.decode(this.content)
-          break
-        case 1:
-          break
-        case 2:
-          decodedMessage = Lmi.decode(this.content)
-          break
-      }
-      // debug('decoded', this.content)
-      debug(decodedMessage)
-      return decodedMessage
-    } catch (e) {
-      debug('Decode error', this.content.toString('hex'))
-      debug(e)
-    }
+  decode (protoClass) {
+    const message = protoClass.decode(this.content)
+    debug(message)
+    return message
   }
 
   raw () {
@@ -60,23 +38,11 @@ class TLV {
     return Buffer.concat([header, this.content])
   }
 
-  static fromObject (obj, type) {
-    type = type || 0
-    var message
-    var content
-    switch (type) {
-      case 0:
-        message = Lnj.create(obj)
-        content = Lnj.encode(message).finish()
-        break
-      case 1:
-        break
-      case 2:
-        message = Lmh.create(obj)
-        content = Lmh.encode(message).finish()
-        break
-    }
+  static encodeObject (obj, protoClass, type) {
+    type = type || TLV.PLAIN
+    const message = protoClass.create(obj)
     debug(message)
+    const content = protoClass.encode(message).finish()
     return new TLV(type, content)
   }
 }

@@ -7,6 +7,10 @@ const TLV = require('./tlv')
 const Cryption = require('./cryption')
 const db = low('db.json')
 const ecdh = crypto.createECDH('prime256v1')
+const Lmi = root.lookupType('laguna.Lmi')
+const Lnk = root.lookupType('laguna.Lnk')
+const Lmh = root.lookupType('laguna.Lmh')
+const Lnj = root.lookupType('laguna.Lnj')
 
 db.defaults({
   // app_uuid: Buffer.from('cd5e310a0d2e47dba288327c778870ad', 'hex')
@@ -66,31 +70,25 @@ class Client {
       lengthBytes[0] = lengthBytes[0] & 0x0f
       const length = lengthBytes.readUInt32BE(0, 4)
       if (this.incompleteMessage.length >= length + 4) {
-        var m = TLV.fromBuffer(this.incompleteMessage.slice(0, length + 4))
-        if (m.encrypted()) {
-          m = this.rxCryption.decrypt(m)
+        var tlv = TLV.fromBuffer(this.incompleteMessage.slice(0, length + 4))
+        if (tlv.encrypted()) {
+          tlv = this.rxCryption.decrypt(tlv)
         }
-        this.completeMessage(m.decode())
+        this.completeMessage(tlv)
 
         this.incompleteMessage = this.incompleteMessage.slice(length + 4)
       }
     }
   }
 
-  completeMessage (decodedMessage) {
-    switch (this.state) {
-      case 'ENCRYPTIONSETUP':
-        this.encryptionSetup(decodedMessage)
-        break
-      case 'SETDEVICENAME':
-        // this.setUserId('bettse')
-        break
-      case 'SETUSERID':
-        break
-    }
-
-    if (decodedMessage.status === 4) {
-      process.stdout.write(decodedMessage.z)
+  completeMessage (tlv) {
+    if (this.state === 'ENCRYPTIONSETUP') {
+      this.encryptionSetup(tlv.decode(Lmi))
+    } else {
+      const message = tlv.decode(Lnk)
+      if (message.status === 4) {
+        process.stdout.write(message.z)
+      }
     }
   }
 
@@ -137,6 +135,10 @@ class Client {
     var message = {
       f: { a: [ userId ] }
     }
+
+    const b = TLV.encodeObject(message, Lnj)
+    const e = this.txCryption.encrypt(b)
+    this.sendMessage(e.raw())
   }
 
   setDeviceName (newName) {
@@ -144,6 +146,10 @@ class Client {
     var message = {
       g: { a: [ '💩' + newName ] }
     }
+
+    const b = TLV.encodeObject(message, Lnj)
+    const e = this.txCryption.encrypt(b)
+    this.sendMessage(e.raw())
   }
 
   requestDeviceInfo () {
@@ -154,6 +160,10 @@ class Client {
         { a: 1 }
       ]
     }
+
+    const b = TLV.encodeObject(message, Lnj)
+    const e = this.txCryption.encrypt(b)
+    this.sendMessage(e.raw())
   }
 
   sendAppVerification (message) {
@@ -164,14 +174,15 @@ class Client {
     // Replace sharedSecret with hmac
     reply.write(mac.toString('hex'), 0x38, 0x20, 'hex')
 
-    var stageThree = {
+    var appVer = {
       a: {
         b: 3,
         c: reply
       }
     }
+    const b = TLV.encodeObject(appVer, Lmh, TLV.SETUP)
 
-    this.encodeAndSendSetup([stageThree])
+    this.sendMessage(b.raw())
   }
 
   sendPublicKey () {
@@ -181,7 +192,8 @@ class Client {
         c: this.public_key
       }
     }
-    this.encodeAndSendSetup([publicKeyMessage])
+    const b = TLV.encodeObject(publicKeyMessage, Lmh, TLV.SETUP)
+    this.sendMessage(b.raw())
   }
 
   checkEyewearVerification (message) {
@@ -211,20 +223,10 @@ class Client {
       }
     }
 
-    this.encodeAndSendSetup([txNonce, txSalt])
-  }
-
-  encodeAndSendSetup (objs) {
-    const Lmh = root.lookupType('laguna.Lmh')
-
-    var all = objs.reduce((acc, obj) => {
-      const o = Lmh.create(obj)
-      const content = Lmh.encode(o).finish()
-      const message = new TLV(TLV.SETUP, content)
-      return Buffer.concat([acc, message.raw()])
-    }, Buffer.alloc(0))
-
-    this.sendMessage(all)
+    const n = TLV.encodeObject(txNonce, Lmh, TLV.SETUP)
+    const s = TLV.encodeObject(txSalt, Lmh, TLV.SETUP)
+    const b = Buffer.concat([n.raw(), s.raw()])
+    this.sendMessage(b)
   }
 }
 
