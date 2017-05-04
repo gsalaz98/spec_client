@@ -143,7 +143,7 @@ message Lmq {
 }
 
 message Lmr {
-  string b = 1;
+  string b = 1; //content id
   bool c = 2;
 }
 
