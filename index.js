@@ -1,9 +1,9 @@
 var noble = require('noble')
 var debug = require('debug')('spec_client')
 const low = require('lowdb')
-var LagunaClient = require('./laguna_client')
+var Client = require('./client')
 const db = low('db.json')
-const lagunaClient = new LagunaClient()
+const client = new Client()
 const serviceUUID = '3e400001b5a3f393e0a9e50e24dcca9e'
 
 const modes = {
@@ -57,17 +57,17 @@ function handleCharacteristics (error, characteristics) {
 
   characteristics.forEach(function (characteristic) {
     if (characteristic.properties.includes('write')) {
-      lagunaClient.writeCharacteristic = characteristic
+      client.writeCharacteristic = characteristic
       switch (mode) {
         case 'pair':
-          lagunaClient.sendPublicKey()
+          client.sendPublicKey()
           break
         case 'idle':
-          lagunaClient.requestDeviceInfo()
+          client.requestDeviceInfo()
           break
       }
     } else if (characteristic.properties.includes('indicate')) {
-      characteristic.on('data', lagunaClient.readChunk.bind(lagunaClient))
+      characteristic.on('data', client.readChunk.bind(client))
       characteristic.subscribe()
     }
   })

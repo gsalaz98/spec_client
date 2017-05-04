@@ -1,4 +1,4 @@
-var debug = require('debug')('LagunaClient')
+var debug = require('debug')('Client')
 const crypto = require('crypto')
 const low = require('lowdb')
 const Message = require('./message')
@@ -11,7 +11,7 @@ db.defaults({
   app_uuid: crypto.randomBytes(16)
 }).write()
 
-class LagunaClient {
+class Client {
   constructor () {
     this.hmacSecret = Buffer.from([0x20, 0x54, 0x50])
     this.public_key = ecdh.generateKeys()
@@ -230,4 +230,4 @@ class LagunaClient {
   }
 }
 
-module.exports = LagunaClient
+module.exports = Client
