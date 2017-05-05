@@ -266,7 +266,7 @@ message Lnk {
   int32 mediaCount = 3; //mediaCount
   uint32 battery = 4; //battery
   string j = 10;
-  int32 status = 11;
+  int32 a = 11;
   int32 k = 12; // deviceColor? device color enum: NONE(1), BLACK(2), CLEAR(3), CORAL(4), TEAL(5),
   DebugReport b = 13; //DebugReport? lnd
   bool r = 14;
@@ -285,7 +285,7 @@ message Lnk {
   bool x = 30; //Button pushed
   bool o = 31;
   Lmb y = 32;
-  string z = 33; //originally a buffer
+  bytes z = 33;
   bytes A2 = 34;
   int32 B2 = 35;
   string C2 = 36;
