@@ -127,6 +127,15 @@ class Client {
 
   encryptionSetupComplete () {
     debug('EncryptionSetup complete')
+    this.state = 'AUTHENTICATED'
+    var message = {
+      m: true
+    }
+
+    const b = TLV.encodeObject(message, Lnj)
+    const e = this.txCryption.encrypt(b)
+    this.sendMessage(e.raw())
+
     // this.setDeviceName('SPECS')
   }
 
