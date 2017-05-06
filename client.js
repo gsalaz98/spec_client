@@ -86,8 +86,8 @@ class Client {
       this.encryptionSetup(tlv.decode(Lmi))
     } else {
       const message = tlv.decode(Lnk)
-      if (message.status === 4) {
-        process.stdout.write(message.z)
+      if (message.a === 4) {
+        debug(message.z.toString())
       }
     }
   }
@@ -126,6 +126,7 @@ class Client {
   }
 
   encryptionSetupComplete () {
+    console.log('Tap the button')
     debug('EncryptionSetup complete')
     this.state = 'AUTHENTICATED'
     var message = {
