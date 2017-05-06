@@ -112,6 +112,8 @@ class Client {
         this.rxSalt = c
         this.rxCryption = new Cryption(this.sharedSecret, this.rxNonce, this.rxSalt)
         this.encryptionSetupComplete()
+      default:
+        debug('Unhandled setup message', decodedMessage)
         break
     }
   }
