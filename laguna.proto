@@ -264,7 +264,7 @@ message Lnj {
 
 message Lnk {
   int32 mediaCount = 3; //mediaCount
-  uint32 battery = 4; //battery
+  int32 battery = 4; //battery
   string j = 10;
   int32 a = 11;
   int32 k = 12; // deviceColor? device color enum: NONE(1), BLACK(2), CLEAR(3), CORAL(4), TEAL(5),
