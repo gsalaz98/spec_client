@@ -269,7 +269,7 @@ message Lnk {
   int32 a = 11;
   int32 k = 12; // deviceColor? device color enum: NONE(1), BLACK(2), CLEAR(3), CORAL(4), TEAL(5),
   DebugReport b = 13; //DebugReport? lnd
-  bool r = 14;
+  bool r = 14; //hasPendingMediaUpdate
   string firmwareVersion = 16;
   string serialNumber = 17;
   int32 q = 18;
@@ -281,8 +281,8 @@ message Lnk {
   Lml p = 25;
   Lnn c = 26;
   bool u = 27;
-  bool w = 28;
-  bool x = 30; //Button pushed
+  bool w = 28; //onSingleTapConfirmed
+  bool x = 30; //Button pushed / VIDEO_RECORDING_STARTED
   bool o = 31;
   Lmb y = 32;
   bytes z = 33;
