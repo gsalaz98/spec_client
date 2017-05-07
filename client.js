@@ -86,9 +86,24 @@ class Client {
       this.encryptionSetup(tlv.decode(Lmi))
     } else {
       const message = tlv.decode(Lnk)
-      if (message.a === 4) {
-        debug(message.z.toString())
-      }
+      this.postEncryptionSetup(message)
+    }
+  }
+
+  postEncryptionSetup (message) {
+    switch (message.a) {
+      case 1:
+        break
+      case 4:
+        if (message.w) { // tap confirmation
+          this.requestDeviceInfo()
+        } else if (message.z) {
+          debug(message.z.toString())
+        }
+        break
+      default:
+        debug('Unhandled "a" value')
+        break
     }
   }
 
@@ -132,15 +147,11 @@ class Client {
     console.log('Tap the button')
     debug('EncryptionSetup complete')
     this.state = 'AUTHENTICATED'
-    var message = {
-      m: true
-    }
 
+    var message = { m: true }
     const b = TLV.encodeObject(message, Lnj)
     const e = this.txCryption.encrypt(b)
     this.sendMessage(e.raw())
-
-    // this.setDeviceName('SPECS')
   }
 
   setUserId (userId) {
@@ -157,7 +168,7 @@ class Client {
   setDeviceName (newName) {
     this.state = 'SETDEVICENAME'
     var message = {
-      g: { a: [ '💩' + newName ] }
+      g: { a: [ newName ] }
     }
 
     const b = TLV.encodeObject(message, Lnj)
