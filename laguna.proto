@@ -247,7 +247,7 @@ message Lni {
 }
 
 message Lnj {
-  Lna a = 3;
+  Lno a = 3;
   Lnc b = 4;
   Lnq c = 5;
   Lmw d = 7;
@@ -298,7 +298,7 @@ message Lnk {
 }
 
 message Lnl {
-  repeated bytes a = 1;
+  bytes a = 1;
 }
 
 message Lnm {
@@ -313,22 +313,22 @@ message Lnn {
 }
 
 message Lno {
-  repeated uint64 a = 1;
+  uint64 a = 1; //unix timestamp
 }
 
 message Lnp {
-  repeated string a = 1; //LAGUNA_USER_ID ?
+  string a = 1; //LAGUNA_USER_ID ?
 }
 message Lnq {
-  repeated int32 a = 1;
+  int32 a = 1;
   string c = 2;
   int32 d = 3;
   string e = 4;
 }
 
 message Lnr {
-  repeated int32 a = 1;
-  repeated int32 b = 2;
+  int32 a = 1;
+  int32 b = 2;
 }
 
 // Video metadata response?
