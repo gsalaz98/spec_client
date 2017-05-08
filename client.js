@@ -93,6 +93,13 @@ class Client {
   postEncryptionSetup (message) {
     switch (message.a) {
       case 1:
+        if (message.battery) {
+          this.setTime()
+          this.startHeartbeat()
+        }
+        break
+      case 3:
+        debug(message.j)
         break
       case 4:
         if (message.w) { // tap confirmation
