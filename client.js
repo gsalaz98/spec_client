@@ -107,6 +107,18 @@ class Client {
     }
   }
 
+  startHeartbeat () {
+    if (this.heartbeat) {
+      return
+    }
+    this.heartbeat = setInterval(() => {
+      const message = { d: { a: 2 } }
+      const b = TLV.encodeObject(message, Lnj)
+      const e = this.txCryption.encrypt(b)
+      this.sendMessage(e.raw())
+    }, 1000)
+  }
+
   encryptionSetup (decodedMessage) {
     const { b, c } = decodedMessage.a
     switch (b) {
