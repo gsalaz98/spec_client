@@ -107,6 +107,14 @@ class Client {
     }
   }
 
+  setTime () {
+    const timestamp = Math.floor(new Date().getTime() / 1000)
+    const message = { a: { a: timestamp } }
+    const b = TLV.encodeObject(message, Lnj)
+    const e = this.txCryption.encrypt(b)
+    this.sendMessage(e.raw())
+  }
+
   startHeartbeat () {
     if (this.heartbeat) {
       return
