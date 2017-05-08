@@ -177,7 +177,7 @@ class Client {
   setUserId (userId) {
     this.state = 'SETUSERID'
     var message = {
-      f: { a: [ userId ] }
+      f: { a: userId }
     }
 
     const b = TLV.encodeObject(message, Lnj)
@@ -188,7 +188,7 @@ class Client {
   setDeviceName (newName) {
     this.state = 'SETDEVICENAME'
     var message = {
-      g: { a: [ newName ] }
+      g: { a: newName }
     }
 
     const b = TLV.encodeObject(message, Lnj)

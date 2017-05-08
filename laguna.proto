@@ -241,16 +241,16 @@ message Lnh {
 }
 
 message Lni {
-  repeated int32 a = 1;
-  repeated int32 b = 2;
-  repeated uint32 c = 3;
+  int32 a = 1;
+  int32 b = 2;
+  uint32 c = 3;
 }
 
 message Lnj {
   Lno a = 3;
   Lnc b = 4;
   Lnq c = 5;
-  Lmw d = 7;
+  Lmw d = 7; //heartbeat
   Lni k = 8;
   Lnp f = 9; //user name?
   repeated Lnm e = 10;
