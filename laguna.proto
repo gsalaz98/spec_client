@@ -294,7 +294,7 @@ message Lnk {
   Lnb f = 39;
   Lnh E2 = 40;
   string F2 = 41;
-  int32 G2 = 42;
+  int32 G2 = 42; //powered, 1=not, 2=case/usb
 }
 
 message Lnl {
