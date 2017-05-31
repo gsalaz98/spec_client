@@ -209,17 +209,17 @@ message Lna {
 message Lnb {
   int32 c = 1;
   int32 d = 2;
-  repeated bool a = 3;
+  bool a = 3;
 }
 
 message Lnc {
-  repeated int32 a = 1;
+  int32 a = 1;
   string c = 2;
   bytes d = 3;
 }
 
 message Lne {
-  repeated string a = 1; //Device name
+  string a = 1; //Device name
 }
 
 message Lnf {
