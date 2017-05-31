@@ -94,8 +94,10 @@ class Client {
     switch (message.a) {
       case 1:
         if (message.battery) {
-          //this.setTime()
-          //this.startHeartbeat()
+          // this.setTime()
+          // this.startHeartbeat()
+        } else if (message.B2 === 1) {
+          this.requestDeviceInfo()
         }
         break
       case 3:
@@ -103,7 +105,7 @@ class Client {
         break
       case 4:
         if (message.w) { // tap confirmation
-          this.requestDeviceInfo()
+          this.sendLncLnq()
         } else if (message.z) {
           debug(message.z.toString())
         }
@@ -215,6 +217,26 @@ class Client {
     const b = TLV.encodeObject(message, Lnj)
     const e = this.txCryption.encrypt(b)
     this.sendMessage(e.raw())
+  }
+
+  sendLncLnq () {
+    var lnc = {
+      b: {
+        a: 3
+      }
+    }
+    const encodedLnc = TLV.encodeObject(lnc, Lnj)
+    const encryptedLnc = this.txCryption.encrypt(encodedLnc)
+    var lnq = {
+      c: {
+        a: 3
+      }
+    }
+    const encodedLnq = TLV.encodeObject(lnq, Lnj)
+    const encryptedLnq = this.txCryption.encrypt(encodedLnq)
+
+    const b = Buffer.concat([encryptedLnc.raw(), encryptedLnq.raw()])
+    this.sendMessage(b)
   }
 
   sendAppVerification (message) {
