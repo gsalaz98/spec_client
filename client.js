@@ -94,8 +94,7 @@ class Client {
     switch (message.a) {
       case 1:
         if (message.battery) {
-          // this.setTime()
-          // this.startHeartbeat()
+          this.enableBTC()
         } else if (message.B2 === 1) {
           this.requestDeviceInfo()
         }
@@ -237,6 +236,20 @@ class Client {
 
     const b = Buffer.concat([encryptedLnc.raw(), encryptedLnq.raw()])
     this.sendMessage(b)
+  }
+
+  enableBTC () {
+    var lnc = {
+      b: {
+        a: 2,
+        b: 0,
+        c: 'Specs',
+        d: Buffer.from('fa87c0d0afac11de8a390800200c9a66', 'hex')
+      }
+    }
+    const encodedLnc = TLV.encodeObject(lnc, Lnj)
+    const encryptedLnc = this.txCryption.encrypt(encodedLnc)
+    this.sendMessage(encryptedLnc.raw())
   }
 
   sendAppVerification (message) {
