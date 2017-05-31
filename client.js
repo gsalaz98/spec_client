@@ -94,8 +94,8 @@ class Client {
     switch (message.a) {
       case 1:
         if (message.battery) {
-          this.setTime()
-          this.startHeartbeat()
+          //this.setTime()
+          //this.startHeartbeat()
         }
         break
       case 3:
