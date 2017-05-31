@@ -4,11 +4,13 @@ const low = require('lowdb')
 var Client = require('./client')
 const db = low('db.json')
 const client = new Client()
-const serviceUUID = '3e400001b5a3f393e0a9e50e24dcca9e'
+// const serviceUUID = '3e400001b5a3f393e0a9e50e24dcca9e'
+
+const adPrefix = 'c203'
 
 const modes = {
-  idle: Buffer.from('c2034b50c80087', 'hex'),
-  pair: Buffer.from('c203303430', 'hex')
+  idle: Buffer.from(adPrefix + '4b50c80087', 'hex'),
+  pair: Buffer.from(adPrefix + '303430', 'hex')
 }
 const mode = db.has('sharedSecret').value() ? 'idle' : 'pair'
 
@@ -25,25 +27,24 @@ noble.on('stateChange', function (state) {
 noble.on('discover', function (peripheral) {
   if (peripheral.advertisement.manufacturerData && peripheral.advertisement.manufacturerData.compare(modes[mode]) === 0) {
     debug('Found', peripheral.advertisement.localName)
-    noble.stopScanning()
+    // noble.stopScanning()
 
     peripheral.on('disconnect', function () {
       debug('disconnected, exiting')
-      process.exit(0)
     })
 
     peripheral.connect(function (error) {
       if (error) {
         debug(error)
       }
-      // debug('connected');
-      peripheral.discoverServices([serviceUUID], function (error, services) {
+      debug('connected')
+      peripheral.discoverServices([], function (error, services) {
         if (error) {
           debug(error)
         }
 
         services.forEach(function (service) {
-          // debug('service', service.uuid);
+          debug('service', service.uuid)
           service.discoverCharacteristics([], handleCharacteristics)
         })
       })
