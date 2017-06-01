@@ -106,7 +106,7 @@ class Client {
         if (message.w) { // tap confirmation
           this.sendLncLnq()
         } else if (message.z) {
-          debug(message.z.toString())
+          process.stdout.write(message.z.toString())
         }
         break
       default:
