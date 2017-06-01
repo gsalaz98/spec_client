@@ -242,7 +242,6 @@ class Client {
     var lnc = {
       b: {
         a: 2,
-        b: 0,
         c: 'Specs',
         d: Buffer.from('fa87c0d0afac11de8a390800200c9a66', 'hex')
       }
