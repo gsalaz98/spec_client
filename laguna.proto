@@ -213,9 +213,9 @@ message Lnb {
 }
 
 message Lnc {
-  int32 a = 1;
-  string c = 2;
-  bytes d = 3;
+  int32 a = 1; //2 = enable bluetooth classic
+  string c = 2; //displayname
+  bytes d = 3; //uuid
 }
 
 message Lne {
