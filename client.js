@@ -243,7 +243,10 @@ class Client {
       b: {
         a: 2,
         c: 'Specs',
-        d: Buffer.from('fa87c0d0afac11de8a390800200c9a66', 'hex')
+        // d: Buffer.from('fa87c0d0afac11de8a390800200c9a66', 'hex')
+        // d: Buffer.from('0000110100001000800000805F9B34FB', 'hex')
+        // d: Buffer.from('3e400001b5a3f393e0a9e50e24dcca9e', 'hex')
+        d: Buffer.from('00000000decafadedecadeafdecacaff', 'hex')
       }
     }
     const encodedLnc = TLV.encodeObject(lnc, Lnj)
