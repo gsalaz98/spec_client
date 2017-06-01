@@ -94,7 +94,7 @@ class Client {
     switch (message.a) {
       case 1:
         if (message.battery) { // device info
-          this.enableBTC()
+          this.setDeviceName()
         } else if (message.B2 === 1) {
           this.requestDeviceInfo()
         }
@@ -193,10 +193,17 @@ class Client {
     this.sendMessage(e.raw())
   }
 
-  setDeviceName (newName) {
+  setDeviceName () {
     this.state = 'SETDEVICENAME'
     var message = {
-      g: { a: newName }
+      b: {
+        a: 1,
+        c: 'MySpecs',
+        d: Buffer.from('3042343931304345324443343445463339414543343039374333463736423132', 'hex') // 0B4910CE2DC44EF39AEC4097C3F76B12 ?
+      },
+      d: {
+        a: 2
+      }
     }
 
     const b = TLV.encodeObject(message, Lnj)
