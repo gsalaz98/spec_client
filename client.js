@@ -93,13 +93,13 @@ class Client {
   postEncryptionSetup (message) {
     switch (message.a) {
       case 1:
-        if (message.battery) {
+        if (message.battery) { // device info
           this.enableBTC()
         } else if (message.B2 === 1) {
           this.requestDeviceInfo()
         }
         break
-      case 3:
+      case 3: // errors
         debug(message.j)
         break
       case 4:
