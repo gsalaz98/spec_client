@@ -27,7 +27,7 @@ noble.on('stateChange', function (state) {
 noble.on('discover', function (peripheral) {
   if (peripheral.advertisement.manufacturerData && peripheral.advertisement.manufacturerData.compare(modes[mode]) === 0) {
     debug('Found', peripheral.advertisement.localName)
-    // noble.stopScanning()
+    noble.stopScanning()
 
     peripheral.on('disconnect', function () {
       debug('disconnected, exiting')
