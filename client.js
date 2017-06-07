@@ -95,6 +95,7 @@ class Client {
       case 1:
         if (message.battery) { // device info
           this.setDeviceName()
+          this.startHeartbeat()
         } else if (message.B2 === 1) {
           this.requestDeviceInfo()
         }
@@ -127,12 +128,18 @@ class Client {
     if (this.heartbeat) {
       return
     }
+    let beat = 16
     this.heartbeat = setInterval(() => {
-      const message = { d: { a: 2 } }
+      const message = { d: { a: beat } }
       const b = TLV.encodeObject(message, Lnj)
       const e = this.txCryption.encrypt(b)
       this.sendMessage(e.raw())
-    }, 1000)
+      if (beat === 2) {
+        beat = 16
+      } else {
+        beat = 2
+      }
+    }, 5000)
   }
 
   encryptionSetup (decodedMessage) {
@@ -198,7 +205,7 @@ class Client {
     var message = {
       b: {
         a: 1,
-        c: 'MySpecs',
+        c: '😎 Eric B\'s Specs',
         d: Buffer.from('3042343931304345324443343445463339414543343039374333463736423132', 'hex') // 0B4910CE2DC44EF39AEC4097C3F76B12 ?
       },
       d: {
@@ -243,22 +250,6 @@ class Client {
 
     const b = Buffer.concat([encryptedLnc.raw(), encryptedLnq.raw()])
     this.sendMessage(b)
-  }
-
-  enableBTC () {
-    var lnc = {
-      b: {
-        a: 2,
-        c: 'Specs',
-        // d: Buffer.from('fa87c0d0afac11de8a390800200c9a66', 'hex')
-        // d: Buffer.from('0000110100001000800000805F9B34FB', 'hex')
-        // d: Buffer.from('3e400001b5a3f393e0a9e50e24dcca9e', 'hex')
-        d: Buffer.from('00000000decafadedecadeafdecacaff', 'hex')
-      }
-    }
-    const encodedLnc = TLV.encodeObject(lnc, Lnj)
-    const encryptedLnc = this.txCryption.encrypt(encodedLnc)
-    this.sendMessage(encryptedLnc.raw())
   }
 
   sendAppVerification (message) {
