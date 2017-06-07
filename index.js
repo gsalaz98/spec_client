@@ -37,14 +37,14 @@ noble.on('discover', function (peripheral) {
       if (error) {
         debug(error)
       }
-      debug('connected')
+      // debug('connected')
       peripheral.discoverServices([], function (error, services) {
         if (error) {
           debug(error)
         }
 
         services.forEach(function (service) {
-          debug('service', service.uuid)
+          // debug('service', service.uuid)
           service.discoverCharacteristics([], handleCharacteristics)
         })
       })
