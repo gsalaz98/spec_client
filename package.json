@@ -12,7 +12,8 @@
     "debug": "^2.6.3",
     "lowdb": "^0.16.2",
     "noble": "^1.8.0",
-    "protobufjs": "~6.7.3"
+    "protobufjs": "~6.7.3",
+    "serialport": "^4.0.7"
   },
   "devDependencies": {
     "standard": "^10.0.2"
