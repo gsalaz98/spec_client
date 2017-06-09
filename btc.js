@@ -8,8 +8,9 @@ const init = Buffer.from('ff550200ee10', 'hex')
 var linkConfig
 
 port.on('data', (data) => {
+  debug('Data:', data)
   // Handle init as special case
-  if (data.compare(init) === 0) {
+  if (data.equals(init)) {
     debug('Init')
     port.write(init, writeError)
     return
@@ -21,7 +22,7 @@ port.on('data', (data) => {
     return
   }
   debug('Packet:', packet)
-
+  debug('serialized', packet.serialize())
   if (packet.isLSP()) {
     linkConfig = packet.getLinkParams()
     debug('linkConfig', linkConfig)
@@ -44,3 +45,15 @@ function writeError (err) {
   }
   debug('message written')
 }
+
+process.on('SIGINT', () => {
+  console.log('Caught interrupt signal')
+  if (port) {
+    port.close((err) => {
+      if (err) {
+        debug(err)
+      }
+      process.exit()
+    })
+  }
+})
