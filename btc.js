@@ -4,7 +4,7 @@ const Packet = require('./packet')
 const port = new SerialPort('/dev/tty.EricBsSpecs-WirelessiAP')
 
 const init = Buffer.from('ff550200ee10', 'hex')
-// var sendSeq = 0x42
+var psnStart = 42
 var linkConfig
 
 port.on('data', (data) => {
@@ -12,7 +12,7 @@ port.on('data', (data) => {
   // Handle init as special case
   if (data.equals(init)) {
     debug('Init')
-    port.write(init, writeError)
+    port.write(init, writeComplete)
     return
   }
 
@@ -22,11 +22,16 @@ port.on('data', (data) => {
     return
   }
   debug('Packet:', packet)
-  debug('serialized', packet.serialize())
-  if (packet.isLSP()) {
+  if (packet.isSYN()) {
     linkConfig = packet.getLinkParams()
     debug('linkConfig', linkConfig)
-  } else {
+    const reply = packet.LSPReply(psnStart++)
+    port.write(reply.serialize(), writeComplete)
+  } else if (packet.isACK()) {
+    // You don't ack and ack, but we track the first ack to determine state
+    if (packet.pan === psnStart - 1) {
+      debug('Link established')
+    }
   }
 })
 
@@ -39,11 +44,10 @@ port.on('error', function (err) {
   debug('Error:', err.message)
 })
 
-function writeError (err) {
+function writeComplete (err) {
   if (err) {
-    return debug('Error on write:', err.message)
+    debug('Error on write:', err.message)
   }
-  debug('message written')
 }
 
 process.on('SIGINT', () => {

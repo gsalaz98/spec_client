@@ -11,6 +11,7 @@ class Packet {
     this.session = session
     this.payload = payload
   }
+
   static parse (buffer) {
     if (!startOfPacket.equals(buffer.slice(0, 2))) {
       debug('Bad buffer, started', buffer.slice(0, 2))
@@ -30,8 +31,16 @@ class Packet {
   }
 
   // is Link Synchronization Payload
-  isLSP () {
+  isSYN () {
     return (this.control & 0x80)
+  }
+
+  isACK () {
+    return (this.control & 0x40)
+  }
+
+  LSPReply (psn) {
+    return new Packet(this.length, this.control | 0x40, psn, this.psn, this.session, this.payload)
   }
 
   getLinkParams () {
@@ -71,7 +80,7 @@ class Packet {
     buffer[7] = this.session
     buffer[8] = Packet.checksum(buffer.slice(0, 8))
     this.payload.copy(buffer, 9)
-    buffer[headerLength + this.payload.length] = Packet.checksum(buffer)
+    buffer[headerLength + this.payload.length] = Packet.checksum(this.payload)
     return buffer
   }
 
