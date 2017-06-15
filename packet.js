@@ -3,8 +3,8 @@ const startOfPacket = Buffer.from('ff5a', 'hex')
 const headerLength = 9 // 24.1 fixed size
 
 class Packet {
-  constructor (length, control, psn, pan, session, payload) {
-    this.length = length
+  constructor (control, psn, pan, session, payload) {
+    this.length = payload ? payload.length + 10 : headerLength
     this.control = control
     this.psn = psn
     this.pan = pan
@@ -21,13 +21,13 @@ class Packet {
       debug('Bad buffer, length', buffer.length)
       return null
     }
-    const length = buffer.readUInt16BE(2)
+    // const length = buffer.readUInt16BE(2)
     const control = buffer[4]
     const seq = buffer[5]
     const ack = buffer[6]
     const session = buffer[7]
     const payload = buffer.slice(9, -1)
-    return new Packet(length, control, seq, ack, session, payload)
+    return new Packet(control, seq, ack, session, payload)
   }
 
   // is Link Synchronization Payload
@@ -40,7 +40,11 @@ class Packet {
   }
 
   LSPReply (psn) {
-    return new Packet(this.length, this.control | 0x40, psn, this.psn, this.session, this.payload)
+    return new Packet(this.control | 0x40, psn, this.psn, this.session, this.payload)
+  }
+
+  Ack () {
+    return new Packet(0x40, this.pan + 1, this.psn, this.session)
   }
 
   getLinkParams () {
@@ -71,7 +75,7 @@ class Packet {
   }
 
   serialize () {
-    let buffer = Buffer.alloc(headerLength + this.payload.length + 1)
+    let buffer = Buffer.alloc(this.length)
     startOfPacket.copy(buffer, 0, 0, 2)
     buffer.writeUInt16BE(this.length, 2)
     buffer[4] = this.control
@@ -79,8 +83,10 @@ class Packet {
     buffer[6] = this.pan
     buffer[7] = this.session
     buffer[8] = Packet.checksum(buffer.slice(0, 8))
-    this.payload.copy(buffer, 9)
-    buffer[headerLength + this.payload.length] = Packet.checksum(this.payload)
+    if(this.payload) {
+      this.payload.copy(buffer, 9)
+      buffer[headerLength + this.payload.length] = Packet.checksum(this.payload)
+    }
     return buffer
   }
 
