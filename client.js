@@ -5,6 +5,7 @@ const root = protobuf.loadSync('laguna.proto')
 const low = require('lowdb')
 const TLV = require('./tlv')
 const Cryption = require('./cryption')
+const Classic = require('./classic')
 const db = low('db.json')
 const ecdh = crypto.createECDH('prime256v1')
 const Lmi = root.lookupType('laguna.Lmi')
@@ -106,8 +107,13 @@ class Client {
       case 4:
         if (message.w) { // tap confirmation
           this.sendLncLnq()
-        } else if (message.z) {
+        }
+        if (message.z.length > 0) {
           process.stdout.write(message.z.toString())
+        }
+        if (message.q === 3) {
+          debug('Starting classic connection')
+          this.classic = new Classic()
         }
         break
       default:

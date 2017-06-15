@@ -4,7 +4,7 @@ const headerLength = 9 // 24.1 fixed size
 
 class Packet {
   constructor (control, psn, pan, session, payload) {
-    this.length = payload ? payload.length + 10 : headerLength
+    this.length = (payload && payload.length > 0) ? payload.length + 10 : headerLength
     this.control = control
     this.psn = psn
     this.pan = pan
