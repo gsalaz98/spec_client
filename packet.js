@@ -83,7 +83,7 @@ class Packet {
     buffer[6] = this.pan
     buffer[7] = this.session
     buffer[8] = Packet.checksum(buffer.slice(0, 8))
-    if(this.payload) {
+    if (this.payload && this.payload.length > 0) {
       this.payload.copy(buffer, 9)
       buffer[headerLength + this.payload.length] = Packet.checksum(this.payload)
     }
