@@ -13,15 +13,15 @@ class Classic {
 
     this.linkOperationRecord = {
       sentAckTimer: 0,
-      nextSentPSN: 42,
-      oldestSentUnAckPSN: 42,
-      initialSentPSN: 42,
+      nextSentPSN: 10,
+      oldestSentUnAckPSN: 10,
+      initialSentPSN: 10,
       lastReceivedInSeqPSN: 0,
       initialReceivedPSN: 0,
       receviedOutOfSeqPSNs: []
     }
 
-    this.port = new SerialPort('/dev/cu.EricBsSpecs-WirelessiAP')
+    this.port = new SerialPort('/dev/tty.EricBsSpecs-WirelessiAP')
 
     this.port.on('data', this.incoming)
 
@@ -36,7 +36,7 @@ class Classic {
   }
 
   write (packet) {
-    debug('Write', packet)
+    // debug('Write', packet)
     const data = packet.serialize()
     debug('Write', data)
     this.port.write(data, this.writeComplete)
@@ -66,10 +66,9 @@ class Classic {
       debug('bad packet')
       return
     }
-    debug('Packet:', packet)
+    // debug('Packet:', packet)
     if (packet.isSYN()) {
       this.linkConfig = packet.getLinkParams()
-      debug('linkConfig', this.linkConfig)
       this.linkOperationRecord.initialReceivedPSN = packet.psn
       const reply = packet.LSPReply(this.linkOperationRecord.nextSentPSN)
       this.write(reply)
