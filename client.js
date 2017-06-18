@@ -111,9 +111,12 @@ class Client {
         if (message.z.length > 0) {
           process.stdout.write(message.z.toString())
         }
-        if (message.q === 3) {
-          debug('Starting classic connection')
-          this.classic = new Classic()
+        if (message.q > 0) {
+          debug('Q', message.q)
+          if (message.q === 3) {
+            debug('Starting classic connection')
+            this.classic = new Classic()
+          }
         }
         break
       default:
