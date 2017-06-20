@@ -1,4 +1,5 @@
-var debug = require('debug')('Client')
+const debug = require('debug')('Client')
+const verbose = require('debug')('verbose')
 const crypto = require('crypto')
 const protobuf = require('protobufjs')
 const root = protobuf.loadSync('laguna.proto')
@@ -109,7 +110,7 @@ class Client {
           this.sendLncLnq()
         }
         if (message.z.length > 0) {
-          process.stdout.write(message.z.toString())
+          verbose(message.z.toString())
         }
         if (message.q > 0) {
           debug('Q', message.q)
