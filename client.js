@@ -242,6 +242,20 @@ class Client {
     this.sendMessage(e.raw())
   }
 
+  enableWifi () {
+    var lnq = {
+      c: {
+        a: 1,
+        c: 'specs',
+        d: 2437 // mhz wifi channel 6
+      }
+    }
+    const encodedLnq = TLV.encodeObject(lnq, Lnj)
+    const encryptedLnq = this.txCryption.encrypt(encodedLnq)
+    this.sendMessage(encryptedLnq.raw())
+  }
+
+  // I think this disabled blutooth classic (lnc) and wifi (lnq) as a precaution during the setup
   sendLncLnq () {
     var lnc = {
       b: {
