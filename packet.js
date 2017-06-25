@@ -40,6 +40,10 @@ class Packet {
   }
 
   LSPReply (psn) {
+    var payload = this.payload
+    payload[1] = 0x7f
+    payload[2] = 0xff
+    payload[3] = 0xff
     return new Packet(this.control | 0x40, psn, this.psn, this.session, this.payload)
   }
 
