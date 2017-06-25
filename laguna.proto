@@ -209,11 +209,11 @@ message Lna {
 message Lnb {
   int32 c = 1;
   int32 d = 2;
-  bool a = 3;
+  bool a = 3; // lnk.f.a ? ChargerState.CHARGER_CONNECTED : ChargerState.CHARGER_DISCONNECTED
 }
 
 message Lnc {
-  int32 a = 1; //2 = enable bluetooth classic
+  int32 a = 1; //1 enable bluetooth classic for ios; 2 = enable bluetooth classic (for android?); 3 = stop
   string c = 2; //displayname
   bytes d = 3; //uuid
 }
@@ -247,10 +247,10 @@ message Lni {
 }
 
 message Lnj {
-  Lno a = 3;
-  Lnc b = 4;
-  Lnq c = 5;
-  Lmw d = 7; //heartbeat
+  Lno a = 3; // set time
+  Lnc b = 4; // 'BT request'
+  Lnq c = 5; // wifi?
+  Lmw d = 7; //heartbeat, maybe other requests 'Action request'
   Lni k = 8;
   Lnp f = 9; //user name?
   repeated Lnm e = 10;
@@ -279,7 +279,7 @@ message Lnk {
   int32 s = 22; //storagePercent
   int32 v = 23;
   Lml p = 25;
-  Lnn c = 26;
+  Lnn c = 26; //temperatures
   bool u = 27;
   bool w = 28; //onSingleTapConfirmed
   bool x = 30; //Button pushed / VIDEO_RECORDING_STARTED
@@ -294,7 +294,7 @@ message Lnk {
   Lnb f = 39;
   Lnh E2 = 40;
   string F2 = 41;
-  int32 G2 = 42; //powered, 1=not, 2=case/usb
+  int32 Charger = 42; //1=DISCONNECTED, 2=CONNECTED
 }
 
 message Lnl {
@@ -306,10 +306,10 @@ message Lnm {
 }
 
 message Lnn {
-  int32 b = 1;
-  int32 c = 2;
-  int32 d = 3;
-  int32 e = 4;
+  int32 b = 1; //nordicTemp
+  int32 c = 2; //ambaTemp
+  int32 d = 3; //wifiTemp
+  int32 e = 4; //CoulombCtrlTemp
 }
 
 message Lno {
@@ -319,7 +319,7 @@ message Lno {
 message Lnp {
   string a = 1; //LAGUNA_USER_ID ?
 }
-message Lnq {
+message Lnq { // wifi?
   int32 a = 1;
   string c = 2;
   int32 d = 3;
