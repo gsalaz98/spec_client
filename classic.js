@@ -40,10 +40,6 @@ class Classic {
     const data = packet.serialize()
     debug('Write', data)
     this.port.write(data, this.writeComplete)
-
-    if (packet.isACK() && packet.payload.length > 0) {
-      this.linkOperationRecord.nextSentPSN = (this.linkOperationRecord.nextSentPSN + 1) % 0xff
-    }
   }
 
   writeComplete (err) {
@@ -73,16 +69,30 @@ class Classic {
       const reply = packet.LSPReply(this.linkOperationRecord.nextSentPSN)
       this.write(reply)
     } else if (packet.isACK()) {
+      this.linkOperationRecord.nextSentPSN = (packet.pan + 1) % 0xff
+
       // You don't ack an ack, but we track the first ack to determine state
       if (packet.pan === this.linkOperationRecord.initialSentPSN) {
         debug('Link established')
-        const RequestAuthenticationCertificate = Buffer.from('40400006aa00', 'hex')
-        const rac = new Packet(0x40, this.linkOperationRecord.nextSentPSN, packet.psn, 1, RequestAuthenticationCertificate)
-        this.write(rac)
+        this.sendRac(packet)
       } else {
         debug('ACK', packet.pan)
       }
     }
+  }
+
+  sendRac (packet) {
+    var attempts = 100
+    const resend = setInterval(() => {
+      if (attempts < 1) {
+        clearInterval(resend)
+        return
+      }
+      const RequestAuthenticationCertificate = Buffer.from('40400006aa00', 'hex')
+      const rac = new Packet(0x40, this.linkOperationRecord.nextSentPSN, packet.psn, 1, RequestAuthenticationCertificate)
+      this.write(rac)
+      attempts = attempts - 1
+    }, 1000)
   }
 }
 
