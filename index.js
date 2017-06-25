@@ -37,6 +37,7 @@ noble.on('discover', function (peripheral) {
       if (error) {
         debug(error)
       }
+      console.log('Release button, but stay ready')
       // debug('connected')
       peripheral.discoverServices([], function (error, services) {
         if (error) {
