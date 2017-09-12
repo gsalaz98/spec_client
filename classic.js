@@ -74,7 +74,7 @@ class Classic {
       // You don't ack an ack, but we track the first ack to determine state
       if (packet.pan === this.linkOperationRecord.initialSentPSN) {
         debug('Link established')
-        this.sendRac(packet)
+        // this.sendRac(packet)
       } else {
         debug('ACK', packet.pan)
       }
