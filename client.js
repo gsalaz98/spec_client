@@ -189,14 +189,23 @@ class Client {
   }
 
   encryptionSetupComplete () {
-    console.log('Tap the button')
     debug('EncryptionSetup complete')
     this.state = 'AUTHENTICATED'
 
+    /*
+    console.log('Tap the button')
+    // Query for pairing state?
     var message = { m: true }
     const b = TLV.encodeObject(message, Lnj)
     const e = this.txCryption.encrypt(b)
     this.sendMessage(e.raw())
+    */
+
+    // Normally the app asks the user to push the botton.
+    // But maybe that isn't required, lets see if we can
+    // just do the next step
+    this.startHeartbeat()
+    this.setDeviceName()
   }
 
   setUserId (userId) {
@@ -214,7 +223,7 @@ class Client {
     this.state = 'SETDEVICENAME'
     var message = {
       b: {
-        a: 1,
+        a: 1, //1 = ios, 2 = android
         c: '😎 Eric B\'s Specs',
         d: Buffer.from('3042343931304345324443343445463339414543343039374333463736423132', 'hex') // 0B4910CE2DC44EF39AEC4097C3F76B12 ?
       },
