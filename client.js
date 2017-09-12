@@ -96,18 +96,19 @@ class Client {
     switch (message.a) {
       case 1:
         if (message.battery) { // device info
-          this.setDeviceName()
           this.startHeartbeat()
+          this.setDeviceName()
         } else if (message.B2 === 1) {
-          this.requestDeviceInfo()
+          // this.requestDeviceInfo()
         }
         break
       case 3: // errors
-        debug(message.j)
+        debug('Error from device', message.j)
         break
       case 4:
         if (message.w) { // tap confirmation
-          this.sendLncLnq()
+          this.requestDeviceInfo()
+          // this.sendLncLnq()
         }
         if (message.z.length > 0) {
           verbose(message.z.toString())
